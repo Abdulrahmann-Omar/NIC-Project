@@ -319,16 +319,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/nature-inspired-computation&type=Date)](https://star-history.com/#YOUR_USERNAME/nature-inspired-computation&Date)
-
----
 
 <div align="center">
 
 **If this project helped you, please consider giving it a ⭐!**
 
-Made with ❤️ and ☕ by [Your Name]
+Made with ❤️ and ☕ by Abdulrahman Omar
 
 </div>
