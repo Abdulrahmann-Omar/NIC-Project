@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+/tmp/
+*.csv
+*.npz
+*.json
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.zip
+kaggle.json
+
+# Modal
+.modal.toml
+
+# Checkpoints
+checkpoints/
+*.checkpoint
+
+# Data
+training.*.csv
+sentiment140.zip
+*.processed.noemoticon.csv
+
+# Logs
+*.log
