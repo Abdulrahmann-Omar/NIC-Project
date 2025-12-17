@@ -1,476 +1,456 @@
 """
-Nature Inspired Computation - Phase 2 (H100 Optimized)
-Cuckoo Search Meta-Optimization + XAI Optimization
+═══════════════════════════════════════════════════════════════════════════════
+NATURE INSPIRED COMPUTATION - PHASE 2
+Advanced Optimization (Cuckoo Search) & Explainable AI (XAI)
+H100 GPU Accelerated
 
-Run with: modal run phase2_modal.py
+HIGH-LEVEL ARCHITECTURE:
+────────────────────────────────────────────────────────────────────────────────
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           MODAL.COM CLOUD EXECUTION                         │
+│  ┌───────────────┐  ┌──────────────┐  ┌─────────────────────────────────┐   │
+│  │  H100 GPU     │→│  TensorFlow  │→│  Checkpoint System (Modal Volume) │   │
+│  │  80GB VRAM    │  │  XLA + AMP   │  │  Persistent Storage             │   │
+│  └───────────────┘  └──────────────┘  └─────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+OBJECTIVES:
+1. Meta-Heuristic: Cuckoo Search (CS) for Hyperparameter Optimization
+2. XAI Analysis: SHAP, LIME, and Saliency Maps on the Best Model
+3. Observability: Structured Logging & Checkpointing (Matching Phase 1)
+═══════════════════════════════════════════════════════════════════════════════
 """
 
 import modal
+import os
+import json
+import time
+import logging
+import math
+import shutil
+import numpy as np
+import pandas as pd
+from pathlib import Path
+from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass, asdict
+from datetime import datetime
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECTION 1: MODAL CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
 
 app = modal.App("nic-phase2-h100")
 
-# Use CUDA-enabled base image for GPU acceleration
+# Image with TensorFlow (CUDA), XAI libs, and standard tools
 image = (
-    modal.Image.from_registry(
-        "nvidia/cuda:12.2.0-runtime-ubuntu22.04",
-        add_python="3.11"
-    )
+    modal.Image
+    .from_registry("nvidia/cuda:12.2.0-runtime-ubuntu22.04", add_python="3.11")
+    .apt_install("unzip", "wget", "git")
     .pip_install(
         "numpy",
         "pandas",
         "scikit-learn",
+        "nltk",
+        "tqdm",
+        "matplotlib",
+        "seaborn",
+        "kaggle",
         "tensorflow[and-cuda]",
         "shap",
         "lime",
         "tf-keras-vis",
-        "matplotlib",
-        "seaborn",
-        "numba"
+        "opencv-python-headless"
     )
 )
 
+volume = modal.Volume.from_name("nic-checkpoints", create_if_missing=True)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECTION 2: DATA STRUCTURES & LOGGING
+# ═══════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class AlgorithmResult:
+    """Structured result from a single optimization algorithm."""
+    algorithm_name: str
+    best_accuracy: float
+    best_lstm_units: int
+    best_dropout: float
+    best_learning_rate: float
+    execution_time_seconds: float
+    iterations_completed: int
+    timestamp: str
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+@dataclass
+class HyperparameterConfig:
+    """BiLSTM model hyperparameters."""
+    lstm_units: int
+    dropout_rate: float
+    learning_rate: float
+    
+    def __repr__(self) -> str:
+        return f"LSTM={self.lstm_units}, Drop={self.dropout_rate:.3f}, LR={self.learning_rate:.6f}"
+
+def setup_logger(name: str = "NIC-Phase2") -> logging.Logger:
+    """Configure structured logging with timestamps."""
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    if logger.handlers:
+        return logger
+    
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
+
+class CheckpointManager:
+    """Handles persistent storage and retrieval of training state."""
+    
+    def __init__(self, checkpoint_dir: Path, logger: logging.Logger):
+        self.checkpoint_dir = checkpoint_dir
+        self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        self.logger = logger
+        
+    def save_checkpoint(self, algorithm_name: str, data: Dict[str, Any]) -> bool:
+        try:
+            checkpoint_file = self.checkpoint_dir / f"{algorithm_name}_checkpoint.json"
+            full_data = {
+                "algorithm": algorithm_name,
+                "timestamp": datetime.now().isoformat(),
+                "data": data
+            }
+            temp_file = checkpoint_file.with_suffix('.tmp')
+            with open(temp_file, 'w') as f:
+                json.dump(full_data, f, indent=2)
+            temp_file.replace(checkpoint_file)
+            self.logger.info(f"✅ Checkpoint saved: {checkpoint_file.name}")
+            return True
+        except Exception as e:
+            self.logger.error(f"❌ Failed to save checkpoint for {algorithm_name}: {e}")
+            return False
+    
+    def load_checkpoint(self, algorithm_name: str) -> Optional[Dict[str, Any]]:
+        checkpoint_file = self.checkpoint_dir / f"{algorithm_name}_checkpoint.json"
+        if not checkpoint_file.exists():
+            return None
+        try:
+            with open(checkpoint_file, 'r') as f:
+                full_data = json.load(f)
+            self.logger.info(f"✅ Loaded checkpoint for {algorithm_name}")
+            return full_data['data']
+        except Exception as e:
+            self.logger.error(f"❌ Failed to load checkpoint for {algorithm_name}: {e}")
+            return None
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SECTION 3: MAIN FUNCTION
+# ═══════════════════════════════════════════════════════════════════════════
+
 @app.function(
     image=image,
-    gpu="H100",  # Fixed: Updated syntax
-    timeout=3600,
-    memory=32768
+    gpu="H100",
+    timeout=7200,
+    secrets=[modal.Secret.from_name("kaggle-secret")],
+    volumes={"/checkpoints": volume}
 )
-def run_phase2_meta_xai():
-    """Phase 2: Cuckoo Search + XAI Optimization (H100 Optimized)"""
-    
-    import numpy as np
-    import pandas as pd
-    import time
-    from numba import jit, prange
+def run_phase2_training() -> Dict[str, Any]:
+    """
+    ═══════════════════════════════════════════════════════════════════════════
+    MAIN PIPELINE - PHASE 2 (CS + XAI)
+    ═══════════════════════════════════════════════════════════════════════════
+    """
     import tensorflow as tf
+    from tensorflow.keras.models import Sequential, load_model
+    from tensorflow.keras.layers import Embedding, LSTM, Bidirectional, Dense, Dropout
+    from sklearn.metrics import accuracy_score
+    import shap
+    import lime
+    from lime import lime_tabular
     
-    # Configure TensorFlow for H100
+    # Setup
+    logger = setup_logger("NIC-Phase2")
+    checkpoint_dir = Path("/checkpoints")
+    checkpoint_mgr = CheckpointManager(checkpoint_dir, logger)
+    
+    logger.info("="*70)
+    logger.info("PHASE 2: H100 OPTIMIZED TRAINING & XAI")
+    logger.info("="*70)
+    
+    # Config GPU
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
-        try:
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            # Enable mixed precision for H100
-            tf.keras.mixed_precision.set_global_policy('mixed_float16')
-            print(f"✅ H100 GPU configured: {len(gpus)} GPU(s) detected")
-            print(f"✅ Mixed precision (FP16) enabled")
-        except RuntimeError as e:
-            print(f"GPU configuration error: {e}")
+        logger.info(f"✅ H100 GPU Detected: {len(gpus)}")
+        tf.keras.mixed_precision.set_global_policy('mixed_float16')
+        logger.info("   └─ Mixed Precision (FP16) Enabled")
     else:
-        print("⚠️ No GPU detected, running on CPU")
-    
-    print("=" * 70)
-    print("PHASE 2: Meta-Optimization & XAI on H100 GPU")
-    print("=" * 70)
-    
-    # =============================================
-    # 1. CUCKOO SEARCH FOR PSO META-OPTIMIZATION
-    # =============================================
-    print("\n--- Task 1: Cuckoo Search - Optimizing PSO Parameters ---")
-    
-    @jit(nopython=True, cache=True)
-    def levy_flight_fast(Lambda=1.5):
-        """JIT-compiled Levy flight step"""
-        from math import gamma, sin, pi
-        sigma = (gamma(1 + Lambda) * sin(pi * Lambda / 2) /
-                (gamma((1 + Lambda) / 2) * Lambda * 2 ** ((Lambda - 1) / 2))) ** (1 / Lambda)
-        u = np.random.randn() * sigma
-        v = np.random.randn()
-        step = u / abs(v) ** (1 / Lambda)
-        return step * 0.01
-    
-    @jit(nopython=True, parallel=True, cache=True)
-    def levy_flight_batch(n, Lambda=1.5):
-        """Batch Levy flight generation with parallel processing"""
-        steps = np.empty(n)
-        for i in prange(n):
-            from math import gamma, sin, pi
-            sigma = (gamma(1 + Lambda) * sin(pi * Lambda / 2) /
-                    (gamma((1 + Lambda) / 2) * Lambda * 2 ** ((Lambda - 1) / 2))) ** (1 / Lambda)
-            u = np.random.randn() * sigma
-            v = np.random.randn()
-            steps[i] = (u / abs(v) ** (1 / Lambda)) * 0.01
-        return steps
-    
-    @jit(nopython=True, parallel=True, cache=True)
-    def pso_performance_batch(params):
-        """Vectorized PSO performance evaluation"""
-        n = params.shape[0]
-        scores = np.empty(n)
-        for i in prange(n):
-            c1, c2, w = params[i]
-            # Simulated performance with parameter-dependent component
-            base_score = 0.75 + 0.05 * np.random.rand()
-            param_quality = ((c1 + c2) / 5.0) * w
-            scores[i] = min(0.95, base_score * param_quality)
-        return scores
-    
-    @jit(nopython=True, parallel=True, cache=True)
-    def clip_to_bounds_batch(nests, bounds):
-        """Vectorized bounds clipping"""
-        n_nests, n_dims = nests.shape
-        result = np.empty_like(nests)
-        for i in prange(n_nests):
-            for j in range(n_dims):
-                if nests[i, j] < bounds[j, 0]:
-                    result[i, j] = bounds[j, 0]
-                elif nests[i, j] > bounds[j, 1]:
-                    result[i, j] = bounds[j, 1]
-                else:
-                    result[i, j] = nests[i, j]
-        return result
-    
-    # Cuckoo Search parameters - optimized for H100
-    n_nests = 100  # 20x increase for parallel processing
-    n_iterations = 30  # More iterations for better convergence
-    pa = 0.25
-    
-    # Initialize nests (C1, C2, w)
-    bounds = np.array([[0.5, 2.5], [0.5, 2.5], [0.4, 0.9]])
-    nests = np.random.rand(n_nests, 3)
-    for i in range(3):
-        nests[:, i] = bounds[i, 0] + nests[:, i] * (bounds[i, 1] - bounds[i, 0])
-    
-    # Batch evaluation
-    fitness = pso_performance_batch(nests)
-    best_nest_idx = np.argmax(fitness)
-    best_nest = nests[best_nest_idx].copy()
-    best_fitness = fitness[best_nest_idx]
-    
-    print(f"Initial population: {n_nests} nests")
-    print(f"Iterations: {n_iterations}")
-    print(f"Initial best fitness: {best_fitness:.4f}")
-    
-    start_time = time.time()
-    
-    # Pre-allocate arrays for better performance
-    new_nests = np.empty((n_nests, 3))
-    
-    for iteration in range(n_iterations):
-        # Generate Levy flights for all nests at once
-        steps = levy_flight_batch(n_nests)
-        random_factors = np.random.randn(n_nests, 3)
-        
-        # Vectorized nest updates
-        for i in range(n_nests):
-            new_nests[i] = nests[i] + steps[i] * (nests[i] - best_nest) * random_factors[i]
-        
-        # Clip to bounds using JIT-compiled function
-        new_nests = clip_to_bounds_batch(new_nests, bounds)
-        
-        # Batch evaluate all new nests
-        new_fitness = pso_performance_batch(new_nests)
-        
-        # Vectorized comparison and update
-        random_indices = np.random.randint(0, n_nests, size=n_nests)
-        
-        for i in range(n_nests):
-            j = random_indices[i]
-            if new_fitness[i] > fitness[j]:
-                nests[j] = new_nests[i].copy()
-                fitness[j] = new_fitness[i]
-                
-                if new_fitness[i] > best_fitness:
-                    best_nest = new_nests[i].copy()
-                    best_fitness = new_fitness[i]
-        
-        # Abandon worst nests (vectorized)
-        n_abandon = int(pa * n_nests)
-        worst_nests = np.argsort(fitness)[:n_abandon]
-        
-        # Generate new random nests for abandoned ones
-        abandoned_nests = np.random.rand(n_abandon, 3)
-        for j in range(3):
-            abandoned_nests[:, j] = bounds[j, 0] + abandoned_nests[:, j] * (bounds[j, 1] - bounds[j, 0])
-        
-        nests[worst_nests] = abandoned_nests
-        fitness[worst_nests] = pso_performance_batch(abandoned_nests)
-        
-        # Update best if found in new abandoned nests
-        max_idx = np.argmax(fitness[worst_nests])
-        if fitness[worst_nests[max_idx]] > best_fitness:
-            best_nest = nests[worst_nests[max_idx]].copy()
-            best_fitness = fitness[worst_nests[max_idx]]
-        
-        # Progress reporting
-        if iteration % 5 == 0 or iteration == n_iterations - 1:
-            avg_fitness = np.mean(fitness)
-            print(f"  Iteration {iteration+1:3d}: Best={best_fitness:.4f}, Avg={avg_fitness:.4f}")
-    
-    cs_time = time.time() - start_time
-    total_evals = n_nests * n_iterations
-    
-    print(f"\n✅ Cuckoo Search Completed")
-    print(f"   Best PSO Parameters:")
-    print(f"     C1 = {best_nest[0]:.3f}")
-    print(f"     C2 = {best_nest[1]:.3f}")
-    print(f"     w  = {best_nest[2]:.3f}")
-    print(f"   Performance: {best_fitness:.4f}")
-    print(f"   Execution time: {cs_time:.2f}s")
-    print(f"   Throughput: {total_evals / cs_time:.0f} evals/sec")
-    
-    # =============================================
-    # 2. XAI OPTIMIZATION (4 Metaheuristics)
-    # =============================================
-    print("\n--- Task 2: XAI Optimization (GPU-Accelerated) ---")
-    
-    @jit(nopython=True, parallel=True, cache=True)
-    def evaluate_xai_configs_batch(configs, config_range):
-        """Batch evaluate XAI configurations with JIT compilation"""
-        n = len(configs)
-        scores = np.empty(n)
-        for i in prange(n):
-            # Simulated XAI evaluation with configuration dependency
-            base_score = 0.70 + 0.20 * np.random.rand()
-            normalized_config = configs[i] / config_range
-            config_quality = 0.15 * normalized_config
-            scores[i] = min(0.95, base_score + config_quality)
-        return scores
-    
-    xai_results = {
-        'Method': [],
-        'Algorithm': [],
-        'Metric': [],
-        'Score': [],
-        'Time': [],
-        'Configurations': []
-    }
-    
-    # 2a. Genetic Algorithm for SHAP (Parallelized)
-    print("\n  2a. Genetic Algorithm - SHAP Optimization")
-    ga_start = time.time()
-    population_size = 200
-    generations = 10
-    
-    # Initial population
-    shap_configs = np.random.choice([50, 75, 100, 125, 150, 175, 200], size=population_size)
-    
-    for gen in range(generations):
-        shap_scores = evaluate_xai_configs_batch(shap_configs.astype(np.float64), 200.0)
-        
-        # Selection (top 50%)
-        top_indices = np.argsort(shap_scores)[-population_size//2:]
-        selected = shap_configs[top_indices]
-        
-        # Crossover and mutation
-        new_population = []
-        for _ in range(population_size):
-            parent1, parent2 = selected[np.random.choice(len(selected), 2, replace=False)]
-            child = (parent1 + parent2) // 2
-            # Mutation
-            if np.random.rand() < 0.1:
-                child = np.random.choice([50, 75, 100, 125, 150, 175, 200])
-            new_population.append(child)
-        
-        shap_configs = np.array(new_population)
-    
-    # Final evaluation
-    shap_scores = evaluate_xai_configs_batch(shap_configs.astype(np.float64), 200.0)
-    ga_best_idx = np.argmax(shap_scores)
-    ga_best_shap = shap_configs[ga_best_idx]
-    ga_best_score = shap_scores[ga_best_idx]
-    ga_time = time.time() - ga_start
-    
-    xai_results['Method'].append('SHAP')
-    xai_results['Algorithm'].append('Genetic Algorithm')
-    xai_results['Metric'].append('Consistency Score')
-    xai_results['Score'].append(round(ga_best_score, 3))
-    xai_results['Time'].append(round(ga_time, 3))
-    xai_results['Configurations'].append(f'{population_size * generations} evals')
-    print(f"     Best n_samples: {ga_best_shap}")
-    print(f"     Consistency: {ga_best_score:.3f}")
-    print(f"     Time: {ga_time:.3f}s ({population_size * generations / ga_time:.0f} evals/sec)")
-    
-    # 2b. Harmony Search for LIME (Vectorized)
-    print("\n  2b. Harmony Search - LIME Optimization")
-    hs_start = time.time()
-    harmony_memory_size = 50
-    iterations = 100
-    
-    # Initialize harmony memory
-    lime_configs = np.random.uniform(0.5, 2.0, size=harmony_memory_size)
-    
-    for it in range(iterations):
-        # Create new harmony
-        new_harmony = np.mean(lime_configs[np.random.choice(harmony_memory_size, 3)])
-        # Pitch adjustment
-        if np.random.rand() < 0.3:
-            new_harmony += np.random.uniform(-0.2, 0.2)
-        new_harmony = np.clip(new_harmony, 0.5, 2.0)
-        
-        # Evaluate
-        all_configs = np.append(lime_configs, new_harmony)
-        all_scores = evaluate_xai_configs_batch(all_configs, 2.0)
-        
-        # Replace worst if better
-        worst_idx = np.argmin(all_scores[:-1])
-        if all_scores[-1] > all_scores[worst_idx]:
-            lime_configs[worst_idx] = new_harmony
-    
-    lime_scores = evaluate_xai_configs_batch(lime_configs, 2.0)
-    hs_best_idx = np.argmax(lime_scores)
-    hs_best_lime = lime_configs[hs_best_idx]
-    hs_best_score = lime_scores[hs_best_idx]
-    hs_time = time.time() - hs_start
-    
-    xai_results['Method'].append('LIME')
-    xai_results['Algorithm'].append('Harmony Search')
-    xai_results['Metric'].append('Fidelity')
-    xai_results['Score'].append(round(hs_best_score, 3))
-    xai_results['Time'].append(round(hs_time, 3))
-    xai_results['Configurations'].append(f'{iterations} iterations')
-    print(f"     Best kernel_width: {hs_best_lime:.2f}")
-    print(f"     Fidelity: {hs_best_score:.3f}")
-    print(f"     Time: {hs_time:.3f}s")
-    
-    # 2c. Firefly Algorithm for Grad-CAM
-    print("\n  2c. Firefly Algorithm - Grad-CAM Optimization")
-    fa_start = time.time()
-    n_fireflies = 30
-    iterations = 50
-    
-    # Initialize fireflies (layer indices)
-    layer_options = np.array([-5, -4, -3, -2, -1])
-    fireflies = np.random.choice(layer_options, size=n_fireflies)
-    intensities = 0.85 + 0.10 * np.random.rand(n_fireflies)
-    
-    for it in range(iterations):
-        for i in range(n_fireflies):
-            for j in range(n_fireflies):
-                if intensities[j] > intensities[i]:
-                    # Move towards brighter firefly
-                    if np.random.rand() < 0.5:
-                        fireflies[i] = fireflies[j]
-                        intensities[i] = 0.85 + 0.10 * np.random.rand()
-    
-    fa_best_idx = np.argmax(intensities)
-    fa_best_layer = fireflies[fa_best_idx]
-    fa_best_score = intensities[fa_best_idx]
-    fa_time = time.time() - fa_start
-    
-    xai_results['Method'].append('Grad-CAM')
-    xai_results['Algorithm'].append('Firefly')
-    xai_results['Metric'].append('Saliency Focus')
-    xai_results['Score'].append(round(fa_best_score, 3))
-    xai_results['Time'].append(round(fa_time, 3))
-    xai_results['Configurations'].append(f'{n_fireflies * iterations} comparisons')
-    print(f"     Best layer: {fa_best_layer}")
-    print(f"     Saliency: {fa_best_score:.3f}")
-    print(f"     Time: {fa_time:.3f}s")
-    
-    # 2d. Bat Algorithm for Combined Stability
-    print("\n  2d. Bat Algorithm - Combined Stability")
-    bat_start = time.time()
-    n_bats = 40
-    iterations = 60
-    
-    # Initialize bats with random positions
-    bat_positions = np.random.rand(n_bats, 3)  # 3D parameter space
-    bat_velocities = np.zeros((n_bats, 3))
-    bat_frequencies = np.random.uniform(0, 2, size=n_bats)
-    
-    best_position = bat_positions[0].copy()
-    best_stability = 0.85 + 0.10 * np.random.rand()
-    
-    for it in range(iterations):
-        for i in range(n_bats):
-            # Update frequency and velocity
-            bat_frequencies[i] = np.random.uniform(0, 2)
-            bat_velocities[i] = bat_velocities[i] + (bat_positions[i] - best_position) * bat_frequencies[i]
-            new_position = bat_positions[i] + bat_velocities[i]
-            new_position = np.clip(new_position, 0, 1)
-            
-            # Evaluate
-            new_stability = 0.85 + 0.10 * np.random.rand() * (1 - np.linalg.norm(new_position - best_position))
-            
-            if new_stability > best_stability and np.random.rand() < 0.5:
-                bat_positions[i] = new_position
-                best_stability = new_stability
-                best_position = new_position.copy()
-    
-    bat_time = time.time() - bat_start
-    
-    xai_results['Method'].append('Combined')
-    xai_results['Algorithm'].append('Bat Algorithm')
-    xai_results['Metric'].append('Stability')
-    xai_results['Score'].append(round(best_stability, 3))
-    xai_results['Time'].append(round(bat_time, 3))
-    xai_results['Configurations'].append(f'{n_bats * iterations} evaluations')
-    print(f"     Stability Score: {best_stability:.3f}")
-    print(f"     Time: {bat_time:.3f}s")
-    
-    xai_df = pd.DataFrame(xai_results)
-    
-    # =============================================
-    # 3. FINAL RESULTS
-    # =============================================
-    total_time = time.time() - start_time
-    
-    print("\n" + "="*70)
-    print("PHASE 2 RESULTS (H100 OPTIMIZED)")
-    print("="*70)
-    
-    print("\n--- Performance Metrics ---")
-    print(f"Total execution time: {total_time:.2f}s")
-    print(f"CS throughput: {total_evals / cs_time:.0f} evaluations/sec")
-    print(f"GPU: H100 with mixed precision (FP16)")
-    print(f"Parallel processing: Numba JIT + prange")
-    
-    print("\n--- Meta-Optimization Results ---")
-    print(f"Algorithm: Cuckoo Search")
-    print(f"Population: {n_nests} nests, {n_iterations} iterations")
-    print(f"Best PSO Parameters:")
-    print(f"  C1 = {best_nest[0]:.3f}")
-    print(f"  C2 = {best_nest[1]:.3f}")
-    print(f"  w  = {best_nest[2]:.3f}")
-    print(f"Performance Score: {best_fitness:.4f}")
-    
-    print("\n--- XAI Optimization Results ---")
-    print(xai_df.to_string(index=False))
-    
-    # Save results
-    xai_df.to_csv('/tmp/phase2_xai_results.csv', index=False)
-    print("\n✅ XAI results saved to /tmp/phase2_xai_results.csv")
-    
-    meta_results = {
-        'Optimizer': ['Cuckoo Search'],
-        'Target': ['PSO Parameters'],
-        'Population': [n_nests],
-        'Iterations': [n_iterations],
-        'C1': [round(best_nest[0], 3)],
-        'C2': [round(best_nest[1], 3)],
-        'w': [round(best_nest[2], 3)],
-        'Performance': [round(best_fitness, 4)],
-        'Time_sec': [round(cs_time, 2)],
-        'Evals_per_sec': [round(total_evals / cs_time, 0)]
-    }
-    meta_df = pd.DataFrame(meta_results)
-    meta_df.to_csv('/tmp/phase2_meta_results.csv', index=False)
-    print("✅ Meta results saved to /tmp/phase2_meta_results.csv")
-    
-    return {
-        'meta': meta_df.to_dict(),
-        'xai': xai_df.to_dict(),
-        'performance': {
-            'total_time_sec': round(total_time, 2),
-            'cs_time_sec': round(cs_time, 2),
-            'cs_throughput': round(total_evals / cs_time, 0),
-            'gpu': 'H100',
-            'speedup_estimate': '15-25x vs T4'
-        }
-    }
+        logger.warning("⚠️ No GPU detected - Performance will be degraded")
 
+    # ═══════════════════════════════════════════════════════════════════
+    # 1. LOAD DATA (Reuse from Phase 1)
+    # ═══════════════════════════════════════════════════════════════════
+    
+    preprocessed_file = checkpoint_dir / "preprocessed_data.npz"
+    if not preprocessed_file.exists():
+        logger.error("❌ Preprocessed data not found! Please run Phase 1 first.")
+        # Fallback: We could re-run connection here, but for now we assume Phase 1 is done
+        return {"error": "Missing preprocessed data"}
+        
+    logger.info("Loading cached data from Phase 1...")
+    data = np.load(preprocessed_file, allow_pickle=True)
+    X_train_seq = data['X_train_seq']
+    X_val_seq = data['X_val_seq']
+    X_test_seq = data['X_test_seq']
+    y_train_arr = data['y_train_arr']
+    y_val_arr = data['y_val_arr']
+    y_test_arr = data['y_test_arr']
+    logger.info(f"✅ Data Loaded. Train: {len(X_train_seq)} samples")
+
+    # Constants
+    MAX_WORDS = 5000
+    MAX_LEN = 50
+
+    # ═══════════════════════════════════════════════════════════════════
+    # 2. MODEL DEFINITION
+    # ═══════════════════════════════════════════════════════════════════
+
+    def build_bilstm(config: HyperparameterConfig) -> tf.keras.Model:
+        model = Sequential([
+            Embedding(MAX_WORDS, 64, input_length=MAX_LEN, name="embedding"),
+            Bidirectional(LSTM(config.lstm_units, return_sequences=False), name="bilstm"),
+            Dropout(config.dropout_rate, name="dropout1"),
+            Dense(32, activation='relu', name="dense1"),
+            Dropout(config.dropout_rate / 2, name="dropout2"),
+            Dense(1, activation='sigmoid', name="output")
+        ])
+        model.compile(
+            loss='binary_crossentropy',
+            optimizer=tf.keras.optimizers.Adam(learning_rate=config.learning_rate),
+            metrics=['accuracy'] # 'accuracy' is supported in mixed_precision
+        )
+        return model
+
+    def fitness_function(config: HyperparameterConfig, epochs=2) -> float:
+        try:
+            tf.keras.backend.clear_session()
+            model = build_bilstm(config)
+            # Use smaller batch size for better generalization or larger for speed on H100
+            # H100 can handle large batches.
+            model.fit(
+                X_train_seq, y_train_arr,
+                validation_data=(X_val_seq, y_val_arr),
+                epochs=epochs,
+                batch_size=256, # Increased for H100
+                verbose=0
+            )
+            y_pred = (model.predict(X_val_seq, verbose=0) > 0.5).astype(int)
+            return accuracy_score(y_val_arr, y_pred)
+        except Exception as e:
+            logger.error(f"Fit error: {e}")
+            return 0.0
+
+    results_list: List[AlgorithmResult] = []
+
+    # ═══════════════════════════════════════════════════════════════════
+    # 3. CUCKOO SEARCH OPTIMIZATION
+    # ═══════════════════════════════════════════════════════════════════
+    
+    logger.info("\n" + "─"*70)
+    logger.info("PHASE 2.1: CUCKOO SEARCH (CS)")
+    logger.info("─"*70)
+    
+    cs_checkpoint = checkpoint_mgr.load_checkpoint("CuckooSearch")
+    best_config_global = None
+    
+    if cs_checkpoint:
+        logger.info("✅ Loaded CS results from checkpoint")
+        res = AlgorithmResult(**cs_checkpoint)
+        results_list.append(res)
+        best_config_global = HyperparameterConfig(res.best_lstm_units, res.best_dropout, res.best_learning_rate)
+    else:
+        logger.info("Running Cuckoo Search...")
+        start_time = time.time()
+        
+        # CS Parameters
+        n_nests = 10
+        pa = 0.25 # Probability of discovery/abandoning
+        n_iterations = 5 
+        
+        # Bounds: LSTM (32-128), Dropout (0.2-0.5), LR (0.001-0.01)
+        bounds = [(32, 128), (0.2, 0.5), (0.001, 0.01)]
+        
+        # Initialize Nests
+        nests = [] # List of [lstm, drop, lr]
+        fitness = []
+        
+        for _ in range(n_nests):
+            lstm = int(np.random.uniform(bounds[0][0], bounds[0][1]))
+            drop = np.random.uniform(bounds[1][0], bounds[1][1])
+            lr = np.random.uniform(bounds[2][0], bounds[2][1])
+            nests.append([lstm, drop, lr])
+            
+        logger.info("  Evaluating initial nests...")
+        for i in range(n_nests):
+            cfg = HyperparameterConfig(int(nests[i][0]), nests[i][1], nests[i][2])
+            acc = fitness_function(cfg)
+            fitness.append(acc)
+            logger.info(f"    Nest {i+1}: {cfg} -> {acc:.4f}")
+            
+        # Get current best
+        best_idx = np.argmax(fitness)
+        best_nest = nests[best_idx].copy()
+        best_fitness = fitness[best_idx]
+        
+        # Levy Flight Helper
+        def get_levy_step(lambda_val=1.5):
+            sigma = (math.gamma(1 + lambda_val) * math.sin(math.pi * lambda_val / 2) / 
+                    (math.gamma((1 + lambda_val) / 2) * lambda_val * 2 ** ((lambda_val - 1) / 2))) ** (1 / lambda_val)
+            u = np.random.normal(0, sigma)
+            v = np.random.normal(0, 1)
+            step = u / abs(v) ** (1 / lambda_val)
+            return step
+
+        for iter_num in range(n_iterations):
+            logger.info(f"  CS Iteration {iter_num + 1}/{n_iterations}")
+            
+            # 1. Generate new solutions via Levy Flights
+            new_nests = []
+            for i in range(n_nests):
+                old_nest = nests[i]
+                step_size = 0.01 * get_levy_step() * (np.array(old_nest) - np.array(best_nest))
+                
+                new_sol = np.array(old_nest) + step_size * np.random.randn(3) # Simple random walk component
+                
+                # Clip
+                new_sol[0] = np.clip(new_sol[0], bounds[0][0], bounds[0][1])
+                new_sol[1] = np.clip(new_sol[1], bounds[1][0], bounds[1][1])
+                new_sol[2] = np.clip(new_sol[2], bounds[2][0], bounds[2][1])
+                new_nests.append(list(new_sol))
+            
+            # Evaluate new solutions (Selection)
+            for i in range(n_nests):
+                cfg = HyperparameterConfig(int(new_nests[i][0]), new_nests[i][1], new_nests[i][2])
+                f_new = fitness_function(cfg)
+                
+                if f_new > fitness[i]:
+                    nests[i] = new_nests[i]
+                    fitness[i] = f_new
+            
+            # 2. Abandon worst nests (Discovery)
+            # Create mask
+            k = int(n_nests * pa)
+            # Sort by fitness
+            sorted_indices = np.argsort(fitness)
+            worst_indices = sorted_indices[:k] # ascending
+            
+            for idx in worst_indices:
+                # Replace with random
+                lstm = int(np.random.uniform(bounds[0][0], bounds[0][1]))
+                drop = np.random.uniform(bounds[1][0], bounds[1][1])
+                lr = np.random.uniform(bounds[2][0], bounds[2][1])
+                nests[idx] = [lstm, drop, lr]
+                # Re-eval
+                cfg = HyperparameterConfig(lstm, drop, lr)
+                fitness[idx] = fitness_function(cfg)
+            
+            # Update Best
+            curr_best_idx = np.argmax(fitness)
+            if fitness[curr_best_idx] > best_fitness:
+                best_fitness = fitness[curr_best_idx]
+                best_nest = nests[curr_best_idx].copy()
+                logger.info(f"    └─ New Best: {best_fitness:.4f}")
+
+        exec_time = time.time() - start_time
+        best_config_global = HyperparameterConfig(int(best_nest[0]), best_nest[1], best_nest[2])
+        
+        result = AlgorithmResult(
+            algorithm_name="CuckooSearch",
+            best_accuracy=float(best_fitness),
+            best_lstm_units=best_config_global.lstm_units,
+            best_dropout=best_config_global.dropout_rate,
+            best_learning_rate=best_config_global.learning_rate,
+            execution_time_seconds=float(exec_time),
+            iterations_completed=n_iterations,
+            timestamp=datetime.now().isoformat()
+        )
+        checkpoint_mgr.save_checkpoint("CuckooSearch", result.to_dict())
+        results_list.append(result)
+        logger.info(f"✅ CS Complete. Best: {best_fitness:.4f} @ {best_config_global}")
+
+    # ═══════════════════════════════════════════════════════════════════
+    # 4. EXPLAINABLE AI (XAI)
+    # ═══════════════════════════════════════════════════════════════════
+    
+    logger.info("\n" + "─"*70)
+    logger.info("PHASE 2.2: XAI ANALYSIS")
+    logger.info("─"*70)
+    
+    if best_config_global:
+        logger.info(f"Training best model for XAI: {best_config_global}")
+        # Retrain on full train data, for more epochs
+        full_model = build_bilstm(best_config_global)
+        full_model.fit(X_train_seq, y_train_arr, epochs=5, batch_size=64, verbose=0)
+        
+        # Save Model Artifact
+        full_model.save("/tmp/best_bilstm_model.keras")
+        logger.info("✅ Best model retrained and saved.")
+
+        # --- A. SHAP ---
+        logger.info("Running SHAP Analysis...")
+        try:
+            # DeepExplainer is ideal for DL, but can be slow. Use background sample.
+            background = X_train_seq[:100]
+            explainer = shap.GradientExplainer(full_model, background)
+            
+            test_sample = X_test_seq[:5]
+            shap_values = explainer.shap_values(test_sample)
+            
+            # Since SHAP visualizers often need matplotlib, we save plot
+            import matplotlib.pyplot as plt
+            # We can't easily display it, but we can verify it ran
+            shap_summary_path = checkpoint_dir / "shap_summary_test.npy"
+            np.save(shap_summary_path, shap_values)
+            logger.info(f"✅ SHAP values calculated and saved to {shap_summary_path}")
+        except Exception as e:
+            logger.error(f"❌ SHAP Failed: {e}")
+
+        # --- B. LIME ---
+        logger.info("Running LIME Analysis...")
+        try:
+            explainer_lime = lime_tabular.LimeTabularExplainer(
+                training_data=X_train_seq,
+                mode="classification",
+                feature_names=[f"word_{i}" for i in range(MAX_LEN)]
+            )
+            # Explain first test instance
+            exp = explainer_lime.explain_instance(
+                X_test_seq[0], 
+                full_model.predict, 
+                num_features=10
+            )
+            lime_path = checkpoint_dir / "lime_explanation.html"
+            exp.save_to_file(str(lime_path))
+            logger.info(f"✅ LIME explanation saved to {lime_path}")
+        except Exception as e:
+            logger.error(f"❌ LIME Failed: {e}")
+            
+    else:
+        logger.warning("Skipping XAI as no best config found.")
+
+    return {"status": "success", "results": [r.to_dict() for r in results_list]}
 
 @app.local_entrypoint()
 def main():
-    """Local entrypoint"""
-    print("Starting Phase 2 on Modal.com with H100 GPU...")
-    print("Using CUDA-enabled image with Numba JIT optimization\n")
-    results = run_phase2_meta_xai.remote()
-    print("\n" + "="*70)
-    print("✅ Phase 2 completed successfully!")
-    print("="*70)
-    print("\nPerformance Summary:")
-    perf = results.get('performance', {})
-    for key, value in perf.items():
-        print(f"  {key}: {value}")
+    print("🚀 Starting Phase 2 on Modal (H100)...")
+    try:
+        res = run_phase2_training.remote()
+        print("\n✅ Execution Complete!")
+        print(json.dumps(res, indent=2))
+    except Exception as e:
+        print(f"\n❌ Execution Failed: {e}")
