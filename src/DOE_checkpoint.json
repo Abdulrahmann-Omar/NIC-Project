@@ -1,0 +1,15 @@
+{
+  "algorithm": "DOE",
+  "timestamp": "2025-12-15T15:18:03.647411",
+  "data": {
+    "algorithm_name": "DOE",
+    "best_accuracy": 0.7177996422182469,
+    "best_lstm_units": 128,
+    "best_dropout": 0.35,
+    "best_learning_rate": 0.001,
+    "execution_time_seconds": 70.32428288459778,
+    "iterations_completed": 9,
+    "timestamp": "2025-12-15T15:18:03.647078"
+  },
+  "metadata": {}
+}

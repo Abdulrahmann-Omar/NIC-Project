@@ -44,7 +44,6 @@ Thumbs.db
 /tmp/
 *.csv
 *.npz
-*.json
 *.png
 *.jpg
 *.jpeg
@@ -55,9 +54,7 @@ kaggle.json
 # Modal
 .modal.toml
 
-# Checkpoints
-checkpoints/
-*.checkpoint
+
 
 # Data
 training.*.csv
