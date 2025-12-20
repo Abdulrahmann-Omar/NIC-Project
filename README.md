@@ -208,6 +208,18 @@ Open: http://localhost:8501
 
 ---
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Algorithm Reference](docs/ALGORITHMS.md) | Complete guide to all 11 algorithms with parameters |
+| [Installation Guide](docs/INSTALLATION.md) | Setup instructions and troubleshooting |
+| [API Reference](docs/API.md) | Technical API documentation |
+| [Medium Article](https://medium.com/@abdu.omar.muhammad/introduction-the-hyperparameter-tuning-nightmare-e9f41d69b5ed) | In-depth technical blog post |
+| [Interactive Book](book/) | Jupyter Book with step-by-step explanations |
+
+---
+
 ## ️ Requirements
 
 ```
