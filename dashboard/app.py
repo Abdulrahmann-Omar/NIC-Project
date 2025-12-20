@@ -3,6 +3,13 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import os
+from pathlib import Path
+
+# Get the directory where this script is located
+BASE_DIR = Path(__file__).parent.resolve()
+ASSETS_DIR = BASE_DIR / "assets"
+RESULTS_DIR = BASE_DIR.parent / "results"
+
 try:
     import tensorflow as tf
     from tensorflow.keras.models import load_model
@@ -12,17 +19,18 @@ except ImportError:
 import plotly.graph_objects as go
 import plotly.express as px
 
-def safe_image(path, caption=None):
+def safe_image(filename, caption=None):
     """Display image if exists, otherwise show placeholder"""
-    if os.path.exists(path):
-        st.image(path, caption=caption)
+    path = ASSETS_DIR / filename
+    if path.exists():
+        st.image(str(path), caption=caption)
     else:
-        st.info(f"Image not available: {path}")
+        st.info(f"Image not available: {filename}")
 
 # Page config
 st.set_page_config(
     page_title="NIC Sentiment Analyzer",
-    page_icon="🧬",
+    page_icon="",
     layout="wide"
 )
 
@@ -45,38 +53,39 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Main header
-st.markdown('<h1 class="main-header">🧬 Nature-Inspired Sentiment Analysis</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header"> Nature-Inspired Sentiment Analysis</h1>', unsafe_allow_html=True)
 
 # Sidebar navigation
 page = st.sidebar.selectbox("Navigation", [
-    "🏠 Home",
-    "🤖 Live Prediction",
-    "📊 Algorithm Comparison",
-    "🎨 XAI Explorer",
-    "📈 Convergence Analysis",
-    "🎁 Bonus Features"
+    " Home",
+    " Live Prediction",
+    " Algorithm Comparison",
+    " XAI Explorer",
+    " Convergence Analysis",
+    " Bonus Features"
 ])
 
 # Load models (cached)
 @st.cache_resource
 def load_trained_model():
-    model_paths = ['best_model.keras', 'best_bilstm_model.keras', 'best_model.h5']
-    for path in model_paths:
-        if os.path.exists(path):
-            return load_model(path)
+    model_names = ['best_model.keras', 'best_bilstm_model.keras', 'best_model.h5']
+    for name in model_names:
+        path = BASE_DIR / name
+        if path.exists():
+            return load_model(str(path))
     return None
 
 @st.cache_data
 def load_results():
-    def safe_csv(path):
-        return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
-    base = '../results/'
-    return safe_csv(base+'phase1_results.csv'), safe_csv(base+'phase2_meta_results.csv'), safe_csv(base+'phase2_xai_results.csv')
+    def safe_csv(name):
+        path = RESULTS_DIR / name
+        return pd.read_csv(str(path)) if path.exists() else pd.DataFrame()
+    return safe_csv('phase1_results.csv'), safe_csv('phase2_meta_results.csv'), safe_csv('phase2_xai_results.csv')
 
 # ============================================
 # PAGE 1: HOME
 # ============================================
-if page == "🏠 Home":
+if page == " Home":
     col1, col2, col3 = st.columns(3)
     
     with col1:
@@ -89,7 +98,7 @@ if page == "🏠 Home":
     st.markdown("---")
     
     # Project overview
-    st.subheader("📋 Project Overview")
+    st.subheader(" Project Overview")
     st.write("""
     This project combines **Nature-Inspired Computation** with **Deep Learning** and **Explainable AI**:
     
@@ -102,13 +111,13 @@ if page == "🏠 Home":
     """)
     
     # Architecture diagram
-    st.subheader("🏗️ System Architecture")
-    safe_image("assets/architecture_diagram.png", "System Architecture")
+    st.subheader("️ System Architecture")
+    safe_image("architecture_diagram.png", "System Architecture")
 
 # ============================================
 # PAGE 2: LIVE PREDICTION
 # ============================================
-elif page == "🤖 Live Prediction":
+elif page == " Live Prediction":
     st.header("Real-Time Sentiment Analysis")
     
     # Text input
@@ -120,12 +129,12 @@ elif page == "🤖 Live Prediction":
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        predict_btn = st.button("🔮 Analyze Sentiment", use_container_width=True)
+        predict_btn = st.button(" Analyze Sentiment", use_container_width=True)
     
     if predict_btn and user_text:
         model = load_trained_model()
         if model is None:
-            st.warning("⚠️ No trained model found. Run Phase2_Complete.ipynb in Colab first to generate the model.")
+            st.warning("️ No trained model found. Run Phase2_Complete.ipynb in Colab first to generate the model.")
         else:
             with st.spinner("Analyzing..."):
                 # Demo prediction (placeholder)
@@ -137,10 +146,10 @@ elif page == "🤖 Live Prediction":
                 
                 with col1:
                     if prediction > 0.5:
-                        st.success(f"### 😊 POSITIVE")
+                        st.success(f"###  POSITIVE")
                         st.metric("Confidence", f"{prediction*100:.1f}%")
                     else:
-                        st.error(f"### 😞 NEGATIVE")
+                        st.error(f"###  NEGATIVE")
                         st.metric("Confidence", f"{(1-prediction)*100:.1f}%")
                 
                 with col2:
@@ -167,7 +176,7 @@ elif page == "🤖 Live Prediction":
                     st.plotly_chart(fig, use_container_width=True)
                 
                 # XAI Explanation
-                st.subheader("🎨 Explainability")
+                st.subheader(" Explainability")
                 
                 # Word importance (simulated SHAP values)
                 words = user_text.split()[:20]
@@ -193,7 +202,7 @@ elif page == "🤖 Live Prediction":
 # ============================================
 # PAGE 3: ALGORITHM COMPARISON
 # ============================================
-elif page == "📊 Algorithm Comparison":
+elif page == " Algorithm Comparison":
     st.header("Metaheuristic Algorithm Performance")
     
     phase1, _, _ = load_results()
@@ -242,7 +251,7 @@ elif page == "📊 Algorithm Comparison":
         st.plotly_chart(fig, use_container_width=True)
     
     # Convergence animation
-    st.subheader("📈 Convergence Animation")
+    st.subheader(" Convergence Animation")
     
     # Create sample convergence data
     iterations = np.arange(1, 16)
@@ -282,7 +291,7 @@ elif page == "📊 Algorithm Comparison":
 # ============================================
 # PAGE 4: XAI EXPLORER
 # ============================================
-elif page == "🎨 XAI Explorer":
+elif page == " XAI Explorer":
     st.header("Explainable AI Methods")
     
     _, _, phase2_xai = load_results()
@@ -299,11 +308,11 @@ elif page == "🎨 XAI Explorer":
         st.subheader(f"{xai_method} Visualization")
         
         if xai_method == "SHAP":
-            safe_image("assets/bonus_attention_sample_1.png", "SHAP values showing word-level importance")
+            safe_image("bonus_attention_sample_1.png", "SHAP values showing word-level importance")
         elif xai_method == "LIME":
-            safe_image("assets/bonus_xai_dashboard.png", "LIME local explanation")
+            safe_image("bonus_xai_dashboard.png", "LIME local explanation")
         elif xai_method == "Grad-CAM":
-            safe_image("assets/phase2_complete_results.png", "Grad-CAM attention heatmap")
+            safe_image("phase2_complete_results.png", "Grad-CAM attention heatmap")
     
     with col2:
         st.subheader("Method Details")
@@ -333,13 +342,13 @@ elif page == "🎨 XAI Explorer":
             st.info(f"**Optimal Parameters:**\n{info['Parameters']}")
     
     # Comparison table
-    st.subheader("📊 XAI Methods Comparison")
+    st.subheader(" XAI Methods Comparison")
     st.dataframe(phase2_xai, use_container_width=True)
 
 # ============================================
 # PAGE 5: CONVERGENCE ANALYSIS
 # ============================================
-elif page == "📈 Convergence Analysis":
+elif page == " Convergence Analysis":
     st.header("Algorithm Convergence Behavior")
     
     # Algorithm selector
@@ -393,13 +402,13 @@ elif page == "📈 Convergence Analysis":
 # ============================================
 # PAGE 6: BONUS FEATURES
 # ============================================
-elif page == "🎁 Bonus Features":
+elif page == " Bonus Features":
     st.header("Bonus Contributions")
     
     bonus_tabs = st.tabs([
-        "📊 Statistical Tests",
-        "🎨 Advanced XAI",
-        "📈 Deep Analysis"
+        " Statistical Tests",
+        " Advanced XAI",
+        " Deep Analysis"
     ])
     
     with bonus_tabs[0]:
@@ -412,10 +421,10 @@ elif page == "🎁 Bonus Features":
         - Cohen's d effect sizes (d > 0.8)
         """)
         
-        safe_image("assets/bonus_statistical_tests.png", "Statistical Tests")
+        safe_image("bonus_statistical_tests.png", "Statistical Tests")
         
         # Interactive p-value calculator
-        st.subheader("🧮 Interactive P-Value Calculator")
+        st.subheader(" Interactive P-Value Calculator")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -437,11 +446,11 @@ elif page == "🎁 Bonus Features":
             col1, col2, col3 = st.columns(3)
             col1.metric("t-statistic", f"{t_stat:.4f}")
             col2.metric("p-value", f"{p_val:.6f}")
-            col3.metric("Significant?", "✅ Yes" if p_val < 0.05 else "❌ No")
+            col3.metric("Significant?", " Yes" if p_val < 0.05 else " No")
     
     with bonus_tabs[1]:
         st.subheader("Advanced XAI Dashboard")
-        safe_image("assets/bonus_xai_dashboard.png", "XAI Dashboard")
+        safe_image("bonus_xai_dashboard.png", "XAI Dashboard")
         
         st.write("""
         **Included visualizations:**
@@ -460,7 +469,7 @@ elif page == "🎁 Bonus Features":
         
         with col1:
             st.download_button(
-                "📥 Download Phase 1 Results",
+                " Download Phase 1 Results",
                 data=open("../results/phase1_results.csv").read() if os.path.exists("../results/phase1_results.csv") else "No data",
                 file_name="phase1_results.csv",
                 mime="text/csv"
@@ -468,7 +477,7 @@ elif page == "🎁 Bonus Features":
         
         with col2:
             st.download_button(
-                "📥 Download XAI Results",
+                " Download XAI Results",
                 data=open("../results/phase2_xai_results.csv").read() if os.path.exists("../results/phase2_xai_results.csv") else "No data",
                 file_name="phase2_xai_results.csv",
                 mime="text/csv"
@@ -476,7 +485,7 @@ elif page == "🎁 Bonus Features":
         
         with col3:
             st.download_button(
-                "📥 Download Full Report",
+                " Download Full Report",
                 data="Full report PDF content...",
                 file_name="full_report.pdf",
                 mime="application/pdf"
@@ -488,8 +497,7 @@ elif page == "🎁 Bonus Features":
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: gray;'>
-    <p>🧬 Nature-Inspired Computation Final Project | Developed by [Your Team Names]</p>
-    <p>GitHub: <a href='https://github.com/yourrepo'>Repository Link</a> | 
-       Paper: <a href='#'>arXiv Link</a></p>
+    <p> Nature-Inspired Computation Final Project | Developed by Abdulrahman Omar</p>
+    <p>GitHub: <a href='https://github.com/Abdulrahmann-Omar/NIC-Project'>Repository</a></p>
 </div>
 """, unsafe_allow_html=True)

@@ -1,4 +1,10 @@
-# 🧬 Nature-Inspired Computation for Deep Learning Optimization
+#  Nature-Inspired Computation for Deep Learning Optimization
+
+<p align="center">
+  <a href="https://modal.com/"><img src="https://modal.com/assets/modal-logo-dark.svg" alt="Modal" height="40"/></a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://colab.research.google.com/"><img src="https://colab.research.google.com/img/colab_favicon_256px.png" alt="Colab" height="40"/></a>
+</p>
 
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)](https://tensorflow.org/)
@@ -10,7 +16,7 @@
 
 ---
 
-## 📋 Project Overview
+##  Project Overview
 
 This project implements **11 unique metaheuristic algorithms** across two phases to optimize a BiLSTM neural network for sentiment classification, with full Explainable AI (XAI) integration.
 
@@ -24,22 +30,22 @@ This project implements **11 unique metaheuristic algorithms** across two phases
 
 ---
 
-## 🏗️ Project Structure
+## ️ Project Structure
 
 ```
 NIC-Project/
-├── 📁 src/                              # Phase 1: Modal.com Code
+├──  src/                              # Phase 1: Modal.com Code
 │   ├── phase1_modal_observable.py       # Main optimization script
 │   ├── phase2_modal.py                  # Alternative Phase 2 for Modal
 │   └── __init__.py
 │
-├── 📁 notebooks/                        # Phase 2: Colab Notebooks
+├──  notebooks/                        # Phase 2: Colab Notebooks
 │   ├── Phase2_Colab_Main.ipynb          # ⭐ Main Phase 2 notebook
 │   ├── phase2_colab.py                  # Standalone Python version
 │   ├── data_converter.py                # JSON to CSV converter
 │   └── best_bilstm_model.keras          # Trained model
 │
-├── 📁 dashboard/                        # Streamlit Dashboard
+├──  dashboard/                        # Streamlit Dashboard
 │   ├── app.py                           # Main dashboard app
 │   ├── generate_visualizations.py       # Image generator
 │   └── assets/                          # Generated visualizations
@@ -47,7 +53,7 @@ NIC-Project/
 │       ├── bonus_xai_dashboard.png
 │       └── ...
 │
-├── 📁 results/                          # Outputs & Checkpoints
+├──  results/                          # Outputs & Checkpoints
 │   ├── phase1_results.json              # Phase 1 algorithm results
 │   ├── phase2_full_results.json         # Phase 2 XAI results
 │   ├── *_checkpoint.json                # Algorithm checkpoints
@@ -60,7 +66,7 @@ NIC-Project/
 
 ---
 
-## 🧬 Algorithms Used (11 Total)
+##  Algorithms Used (11 Total)
 
 ### Phase 1: Model Hyperparameter Optimization (6 Algorithms)
 *Run on Modal.com H100 GPU*
@@ -98,7 +104,7 @@ NIC-Project/
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Python 3.8+
@@ -115,7 +121,7 @@ pip install -r requirements.txt
 
 ---
 
-## ⚡ Phase 1: Modal.com (H100 GPU)
+##  Phase 1: Modal.com (H100 GPU)
 
 ### Setup Modal
 ```bash
@@ -144,7 +150,7 @@ modal run src/phase1_modal_observable.py
 
 ---
 
-## 🔬 Phase 2: Google Colab (T4 GPU)
+##  Phase 2: Google Colab (T4 GPU)
 
 ### Run Phase 2
 1. Open [`notebooks/Phase2_Colab_Main.ipynb`](notebooks/Phase2_Colab_Main.ipynb) in Colab
@@ -155,15 +161,15 @@ modal run src/phase1_modal_observable.py
 **Output**: `results/phase2_full_results.json`, trained model
 
 ### Phase 2 Features
-- ✅ Cuckoo Search meta-optimization
-- ✅ SHAP feature importance (GA optimized)
-- ✅ LIME local explanations (Harmony Search optimized)
-- ✅ Grad-CAM attention maps (Firefly optimized)
-- ✅ Explanation stability analysis (Bat optimized)
+-  Cuckoo Search meta-optimization
+-  SHAP feature importance (GA optimized)
+-  LIME local explanations (Harmony Search optimized)
+-  Grad-CAM attention maps (Firefly optimized)
+-  Explanation stability analysis (Bat optimized)
 
 ---
 
-## 📊 Dashboard
+##  Dashboard
 
 ### Run Locally
 ```bash
@@ -175,16 +181,16 @@ streamlit run app.py
 Open: http://localhost:8501
 
 ### Dashboard Features
-- 🏠 Project overview & architecture
-- 🤖 Live sentiment prediction
-- 📊 Algorithm comparison charts
-- 🎨 XAI visualizations (SHAP, LIME, Grad-CAM)
-- 📈 Convergence analysis
-- 🎁 Statistical significance tests
+-  Project overview & architecture
+-  Live sentiment prediction
+-  Algorithm comparison charts
+-  XAI visualizations (SHAP, LIME, Grad-CAM)
+-  Convergence analysis
+-  Statistical significance tests
 
 ---
 
-## 📈 Results Summary
+##  Results Summary
 
 | Metric | Value |
 |--------|-------|
@@ -195,7 +201,7 @@ Open: http://localhost:8501
 
 ---
 
-## 📁 Key Files
+##  Key Files
 
 | File | Purpose | Run With |
 |------|---------|----------|
@@ -206,7 +212,7 @@ Open: http://localhost:8501
 
 ---
 
-## 🛠️ Requirements
+## ️ Requirements
 
 ```
 tensorflow>=2.10
@@ -223,13 +229,13 @@ plotly
 
 ---
 
-## 📄 License
+##  License
 
 MIT License - see [LICENSE](LICENSE)
 
 ---
 
-## 👤 Author
+##  Author
 
 **Abdulrahman Omar**
 
