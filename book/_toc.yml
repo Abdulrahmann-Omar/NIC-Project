@@ -1,0 +1,10 @@
+# Table of contents
+format: jb-book
+root: intro
+chapters:
+  - file: chapter1_problem
+  - file: chapter2_algorithms
+  - file: chapter3_phase1
+  - file: chapter4_phase2
+  - file: chapter5_results
+  - file: chapter6_xai

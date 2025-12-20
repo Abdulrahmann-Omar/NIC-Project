@@ -1,0 +1,24 @@
+# Book settings
+title: Nature-Inspired Computation for Deep Learning
+author: Abdulrahman Omar
+logo: ""
+
+# Force re-execution of notebooks on each build
+execute:
+  execute_notebooks: auto
+
+# Define the table of contents
+parse:
+  myst_enable_extensions:
+    - colon_fence
+    - deflist
+
+# Information about where the book exists on the web
+repository:
+  url: https://github.com/Abdulrahmann-Omar/NIC-Project
+  branch: master
+
+# Add GitHub buttons to your book
+html:
+  use_issues_button: true
+  use_repository_button: true
