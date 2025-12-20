@@ -1,0 +1,63 @@
+name: Deploy Complete Site
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Jupyter Book
+        run: pip install "jupyter-book<2.0.0"
+
+      - name: Build Jupyter Book
+        run: jupyter-book build book/ --all
+
+      - name: Create unified site structure
+        run: |
+          mkdir -p _site
+          
+          # Copy main docs page
+          cp docs/index.html _site/
+          cp docs/style.css _site/
+          
+          # Copy presentation
+          mkdir -p _site/presentation
+          cp -r docs/presentation/* _site/presentation/
+          
+          # Copy Jupyter Book
+          mkdir -p _site/book
+          cp -r book/_build/html/* _site/book/
+          
+          echo "=== Site structure ==="
+          ls -la _site/
+          ls -la _site/presentation/ || echo "No presentation"
+          ls -la _site/book/ || echo "No book"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
