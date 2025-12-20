@@ -765,6 +765,15 @@
                     leading to superior exploration of the search space."
                 </p>
             </div>
+
+            <!-- Interactive Chart -->
+            <div id="resultsChart"
+                style="margin-top: 30px; height: 250px; background: var(--bg-secondary); border-radius: 16px;"></div>
+
+            <!-- Confetti container -->
+            <div id="confetti-container"
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden;">
+            </div>
         </div>
     </section>
 
@@ -1247,6 +1256,100 @@
             document.documentElement.style.scrollBehavior = 'auto';
             document.querySelectorAll('.particle').forEach(p => p.style.animation = 'none');
         }
+
+        // Interactive Plotly Chart for Results
+        const resultsChartEl = document.getElementById('resultsChart');
+        if (resultsChartEl) {
+            const chartData = [{
+                x: ['Tabu Search', 'WOA', 'PSO', 'GWO', 'SA', 'DOE'],
+                y: [73.43, 72.94, 72.76, 72.76, 72.72, 71.78],
+                type: 'bar',
+                marker: {
+                    color: ['#00FF88', '#00D9FF', '#00D9FF', '#00D9FF', '#FF6B35', '#FF6B35'],
+                    opacity: 0.9
+                },
+                text: ['73.43%', '72.94%', '72.76%', '72.76%', '72.72%', '71.78%'],
+                textposition: 'outside',
+                textfont: { color: '#FFFFFF', size: 12 }
+            }];
+
+            const chartLayout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#94A3B8' },
+                margin: { t: 20, b: 60, l: 50, r: 20 },
+                yaxis: {
+                    range: [70, 74],
+                    gridcolor: 'rgba(255,255,255,0.1)',
+                    title: 'Accuracy (%)'
+                },
+                xaxis: {
+                    tickangle: -30
+                },
+                showlegend: false
+            };
+
+            // Only render when slide is visible
+            const chartObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !resultsChartEl.dataset.rendered) {
+                        Plotly.newPlot('resultsChart', chartData, chartLayout, { responsive: true, displayModeBar: false });
+                        resultsChartEl.dataset.rendered = 'true';
+                    }
+                });
+            }, { threshold: 0.5 });
+            chartObserver.observe(document.getElementById('slide-5'));
+        }
+
+        // Confetti Effect
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            if (!container) return;
+
+            const colors = ['#FFD700', '#00FF88', '#00D9FF', '#8B5CF6', '#FF6B35'];
+
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 10 + 5}px;
+                    height: ${Math.random() * 10 + 5}px;
+                    background: ${colors[Math.floor(Math.random() * colors.length)]};
+                    left: ${Math.random() * 100}%;
+                    top: -20px;
+                    opacity: ${Math.random() * 0.5 + 0.5};
+                    transform: rotate(${Math.random() * 360}deg);
+                    animation: confettiFall ${Math.random() * 3 + 2}s linear forwards;
+                `;
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+
+        // Trigger confetti on results slide
+        let confettiTriggered = false;
+        const confettiObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !confettiTriggered) {
+                    confettiTriggered = true;
+                    setTimeout(createConfetti, 500);
+                }
+            });
+        }, { threshold: 0.7 });
+
+        const resultsSlide = document.getElementById('slide-5');
+        if (resultsSlide) confettiObserver.observe(resultsSlide);
+
+        // Add confetti animation CSS
+        const confettiStyle = document.createElement('style');
+        confettiStyle.textContent = `
+            @keyframes confettiFall {
+                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(confettiStyle);
     </script>
 </body>
 
