@@ -1,0 +1,15 @@
+{
+  "algorithm": "GWO",
+  "timestamp": "2025-12-15T15:42:58.654059",
+  "data": {
+    "algorithm_name": "GWO",
+    "best_accuracy": 0.7276386404293381,
+    "best_lstm_units": 64,
+    "best_dropout": 0.31055085215969475,
+    "best_learning_rate": 0.00520646992667552,
+    "execution_time_seconds": 323.0595088005066,
+    "iterations_completed": 15,
+    "timestamp": "2025-12-15T15:42:58.653837"
+  },
+  "metadata": {}
+}

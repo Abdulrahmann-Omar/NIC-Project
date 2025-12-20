@@ -1,0 +1,72 @@
+{
+  "baseline_accuracy": 0.49754135002235134,
+  "algorithms": [
+    {
+      "algorithm_name": "DOE",
+      "best_accuracy": 0.7177996422182469,
+      "best_lstm_units": 128,
+      "best_dropout": 0.35,
+      "best_learning_rate": 0.001,
+      "execution_time_seconds": 70.32428288459778,
+      "iterations_completed": 9,
+      "timestamp": "2025-12-15T15:18:03.647078"
+    },
+    {
+      "algorithm_name": "PSO",
+      "best_accuracy": 0.7276386404293381,
+      "best_lstm_units": 64,
+      "best_dropout": 0.2818681711573507,
+      "best_learning_rate": 0.005300099798653538,
+      "execution_time_seconds": 270.08785796165466,
+      "iterations_completed": 15,
+      "timestamp": "2025-12-15T15:22:33.738392"
+    },
+    {
+      "algorithm_name": "TabuSearch",
+      "best_accuracy": 0.7343470483005367,
+      "best_lstm_units": 128,
+      "best_dropout": 0.44999999999999996,
+      "best_learning_rate": 0.001,
+      "execution_time_seconds": 901.8504707813263,
+      "iterations_completed": 10,
+      "timestamp": "2025-12-15T15:37:35.591625"
+    },
+    {
+      "algorithm_name": "GWO",
+      "best_accuracy": 0.7276386404293381,
+      "best_lstm_units": 64,
+      "best_dropout": 0.31055085215969475,
+      "best_learning_rate": 0.00520646992667552,
+      "execution_time_seconds": 323.0595088005066,
+      "iterations_completed": 15,
+      "timestamp": "2025-12-15T15:42:58.653837"
+    },
+    {
+      "algorithm_name": "WOA",
+      "best_accuracy": 0.7294275491949911,
+      "best_lstm_units": 32,
+      "best_dropout": 0.2,
+      "best_learning_rate": 0.001,
+      "execution_time_seconds": 318.83740854263306,
+      "iterations_completed": 15,
+      "timestamp": "2025-12-15T15:48:17.493970"
+    },
+    {
+      "algorithm_name": "SA",
+      "best_accuracy": 0.7271914132379249,
+      "best_lstm_units": 64,
+      "best_dropout": 0.35,
+      "best_learning_rate": 0.005,
+      "execution_time_seconds": 352.8929908275604,
+      "iterations_completed": 20,
+      "timestamp": "2025-12-15T15:55:41.220140"
+    }
+  ],
+  "summary": {
+    "total_algorithms": 6,
+    "best_algorithm": "TabuSearch",
+    "best_accuracy": 0.7343470483005367,
+    "total_runtime_seconds": 2237.052519798279,
+    "timestamp": "2025-12-15T15:55:41.223346"
+  }
+}

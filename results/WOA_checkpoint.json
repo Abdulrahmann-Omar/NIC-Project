@@ -1,0 +1,15 @@
+{
+  "algorithm": "WOA",
+  "timestamp": "2025-12-15T15:48:17.494127",
+  "data": {
+    "algorithm_name": "WOA",
+    "best_accuracy": 0.7294275491949911,
+    "best_lstm_units": 32,
+    "best_dropout": 0.2,
+    "best_learning_rate": 0.001,
+    "execution_time_seconds": 318.83740854263306,
+    "iterations_completed": 15,
+    "timestamp": "2025-12-15T15:48:17.493970"
+  },
+  "metadata": {}
+}

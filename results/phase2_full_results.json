@@ -1,0 +1,18 @@
+{
+  "algorithm_name": "CuckooSearch",
+  "best_accuracy": 0.7774,
+  "best_lstm_units": 35,
+  "best_dropout": 0.44633287412956507,
+  "best_learning_rate": 0.003152765539565651,
+  "execution_time_seconds": 399.9034581184387,
+  "iterations_completed": 5,
+  "convergence_history": [
+    0.7712,
+    0.7738,
+    0.7774,
+    0.7774,
+    0.7774,
+    0.7774
+  ],
+  "timestamp": "2025-12-20T01:29:33.974382"
+}
