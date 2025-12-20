@@ -208,10 +208,13 @@ elif page == " Algorithm Comparison":
     phase1, _, _ = load_results()
     
     # Interactive table
-    st.dataframe(
-        phase1.style.highlight_max(subset=['Best_Accuracy'], color='lightgreen'),
-        use_container_width=True
-    )
+    if not phase1.empty and 'Best_Accuracy' in phase1.columns:
+        st.dataframe(
+            phase1.style.highlight_max(subset=['Best_Accuracy'], color='lightgreen'),
+            use_container_width=True
+        )
+    else:
+        st.warning("No Phase 1 results available. Run Phase 1 first.")
     
     # Comparison charts
     col1, col2 = st.columns(2)

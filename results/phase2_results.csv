@@ -1,0 +1,11 @@
+Metric,Value
+Algorithm,CuckooSearch
+Best Validation Accuracy,0.7774
+Test Accuracy,0.7244
+LSTM Units,35
+Dropout Rate,0.4463
+Learning Rate,0.003153
+Runtime (seconds),399.9
+Iterations,5
+SHAP Status,error
+LIME Status,error

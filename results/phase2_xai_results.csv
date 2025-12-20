@@ -1,0 +1,5 @@
+XAI_Method,Optimizer,Quality_Score,Stability,Computational_Cost
+SHAP,Genetic Algorithm,0.8234,0.92,Medium
+LIME,Harmony Search,0.8156,0.88,Low
+Grad-CAM,Firefly Algorithm,0.8412,0.95,High
+Integrated Gradients,PSO,0.7989,0.85,Medium

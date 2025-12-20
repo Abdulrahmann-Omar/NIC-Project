@@ -42,14 +42,13 @@ Thumbs.db
 
 # Project specific
 /tmp/
-*.csv
-*.npz
-*.png
-*.jpg
-*.jpeg
-*.pdf
-*.zip
 kaggle.json
+
+# Keep these folders tracked
+!dashboard/assets/*.png
+!results/*.csv
+!results/*.json
+!dashboard/*.keras
 
 # Modal
 .modal.toml
