@@ -25,9 +25,6 @@ venv/
 ENV/
 env/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb_checkpoints/
 
 # IDE
 .vscode/
@@ -54,11 +51,6 @@ kaggle.json
 .modal.toml
 
 
-
-# Data
-training.*.csv
-sentiment140.zip
-*.processed.noemoticon.csv
 
 # Logs
 *.log
