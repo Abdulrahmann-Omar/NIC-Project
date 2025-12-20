@@ -213,83 +213,83 @@ elif page == " Algorithm Comparison":
             phase1.style.highlight_max(subset=['Best_Accuracy'], color='lightgreen'),
             use_container_width=True
         )
+        
+        # Comparison charts
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Accuracy comparison
+            fig = px.bar(
+                phase1,
+                x='Algorithm',
+                y='Best_Accuracy',
+                color='Best_Accuracy',
+                color_continuous_scale='Viridis',
+                title='Algorithm Accuracy Comparison'
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Radar chart
+            categories = ['Accuracy', 'Speed', 'Stability', 'Convergence']
+            fig = go.Figure()
+            
+            for _, row in phase1.head(3).iterrows():
+                fig.add_trace(go.Scatterpolar(
+                    r=[row['Best_Accuracy']*100, 
+                       np.random.rand()*100,
+                       np.random.rand()*100,
+                       np.random.rand()*100],
+                    theta=categories,
+                    fill='toself',
+                    name=row['Algorithm']
+                ))
+            
+            fig.update_layout(
+                polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                title="Multi-Metric Comparison"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        # Convergence animation
+        st.subheader(" Convergence Animation")
+        
+        # Create sample convergence data
+        iterations = np.arange(1, 16)
+        algorithms = phase1['Algorithm'].values[:4]
+        
+        frames = []
+        for i in range(1, 16):
+            frame_data = []
+            for algo in algorithms:
+                y = 0.70 + (0.79 - 0.70) * (1 - np.exp(-i/5)) + np.random.rand()*0.01
+                frame_data.append(go.Scatter(
+                    x=iterations[:i],
+                    y=np.linspace(0.70, y, i),
+                    mode='lines+markers',
+                    name=algo
+                ))
+            frames.append(go.Frame(data=frame_data, name=str(i)))
+        
+        fig = go.Figure(
+            data=frames[0].data,
+            frames=frames,
+            layout=go.Layout(
+                xaxis=dict(range=[0, 15], title="Iteration"),
+                yaxis=dict(range=[0.69, 0.80], title="Accuracy"),
+                title="Algorithm Convergence Over Time",
+                updatemenus=[dict(
+                    type="buttons",
+                    buttons=[
+                        dict(label="Play", method="animate", args=[None, {"frame": {"duration": 200}}]),
+                        dict(label="Pause", method="animate", args=[[None], {"frame": {"duration": 0}}])
+                    ]
+                )]
+            )
+        )
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("No Phase 1 results available. Run Phase 1 first.")
-    
-    # Comparison charts
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Accuracy comparison
-        fig = px.bar(
-            phase1,
-            x='Algorithm',
-            y='Best_Accuracy',
-            color='Best_Accuracy',
-            color_continuous_scale='Viridis',
-            title='Algorithm Accuracy Comparison'
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        # Radar chart
-        categories = ['Accuracy', 'Speed', 'Stability', 'Convergence']
-        fig = go.Figure()
-        
-        for _, row in phase1.head(3).iterrows():
-            fig.add_trace(go.Scatterpolar(
-                r=[row['Best_Accuracy']*100, 
-                   np.random.rand()*100,
-                   np.random.rand()*100,
-                   np.random.rand()*100],
-                theta=categories,
-                fill='toself',
-                name=row['Algorithm']
-            ))
-        
-        fig.update_layout(
-            polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-            title="Multi-Metric Comparison"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    
-    # Convergence animation
-    st.subheader(" Convergence Animation")
-    
-    # Create sample convergence data
-    iterations = np.arange(1, 16)
-    algorithms = phase1['Algorithm'].values[:4]
-    
-    frames = []
-    for i in range(1, 16):
-        frame_data = []
-        for algo in algorithms:
-            y = 0.70 + (0.79 - 0.70) * (1 - np.exp(-i/5)) + np.random.rand()*0.01
-            frame_data.append(go.Scatter(
-                x=iterations[:i],
-                y=np.linspace(0.70, y, i),
-                mode='lines+markers',
-                name=algo
-            ))
-        frames.append(go.Frame(data=frame_data, name=str(i)))
-    
-    fig = go.Figure(
-        data=frames[0].data,
-        frames=frames,
-        layout=go.Layout(
-            xaxis=dict(range=[0, 15], title="Iteration"),
-            yaxis=dict(range=[0.69, 0.80], title="Accuracy"),
-            title="Algorithm Convergence Over Time",
-            updatemenus=[dict(
-                type="buttons",
-                buttons=[
-                    dict(label="Play", method="animate", args=[None, {"frame": {"duration": 200}}]),
-                    dict(label="Pause", method="animate", args=[[None], {"frame": {"duration": 0}}])
-                ]
-            )]
-        )
-    )
-    st.plotly_chart(fig, use_container_width=True)
 
 # ============================================
 # PAGE 4: XAI EXPLORER
