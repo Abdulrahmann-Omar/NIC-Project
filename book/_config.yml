@@ -5,7 +5,7 @@ logo: ""
 
 # Force re-execution of notebooks on each build
 execute:
-  execute_notebooks: auto
+  execute_notebooks: "off"
 
 # Define the table of contents
 parse:
