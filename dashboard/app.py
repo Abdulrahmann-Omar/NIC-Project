@@ -62,6 +62,7 @@ page = st.sidebar.selectbox("Navigation", [
     " Algorithm Comparison",
     " XAI Explorer",
     " Convergence Analysis",
+    " 3D Visualizations",
     " Bonus Features"
 ])
 
@@ -403,7 +404,75 @@ elif page == " Convergence Analysis":
         st.table(pd.DataFrame(metrics_data))
 
 # ============================================
-# PAGE 6: BONUS FEATURES
+# PAGE 6: 3D VISUALIZATIONS
+# ============================================
+elif page == " 3D Visualizations":
+    st.header("3D Algorithm Visualizations")
+    st.write("Interactive 3D animations showing how metaheuristic algorithms explore the search space.")
+    
+    viz_type = st.selectbox("Select Visualization", [
+        "PSO - Particle Swarm Optimization",
+        "GWO - Grey Wolf Optimizer",
+        "Search Space Comparison"
+    ])
+    
+    if viz_type == "PSO - Particle Swarm Optimization":
+        st.subheader("PSO: Particles Converging to Optimum")
+        st.write("""
+        Watch how particles move through 3D space, balancing:
+        - **Personal best** (cognitive component)
+        - **Global best** (social component)
+        - **Inertia** (momentum)
+        """)
+        
+        # Embed PSO animation
+        import sys
+        sys.path.insert(0, str(BASE_DIR.parent / "visualizations"))
+        try:
+            from algorithm_3d import create_pso_animation
+            fig = create_pso_animation(n_particles=15, n_iterations=20)
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.warning(f"Could not load PSO animation: {e}")
+            st.info("View the standalone HTML: visualizations/pso_3d_animation.html")
+    
+    elif viz_type == "GWO - Grey Wolf Optimizer":
+        st.subheader("GWO: Wolf Pack Hunting")
+        st.write("""
+        Watch the wolf pack hierarchy:
+        - **Alpha (Red)**: Best solution
+        - **Beta (Orange)**: Second best
+        - **Delta (Yellow)**: Third best
+        - **Omega (Gray)**: Rest of pack
+        """)
+        
+        try:
+            from algorithm_3d import create_gwo_animation
+            fig = create_gwo_animation(n_wolves=12, n_iterations=20)
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.warning(f"Could not load GWO animation: {e}")
+            st.info("View the standalone HTML: visualizations/gwo_3d_animation.html")
+    
+    else:  # Search Space Comparison
+        st.subheader("Optimization Landscape Comparison")
+        st.write("""
+        Compare different test functions used to benchmark optimization algorithms:
+        - **Sphere**: Simple unimodal (one global minimum)
+        - **Rastrigin**: Highly multimodal (many local minima)
+        - **Rosenbrock**: Banana-shaped valley (hard to optimize)
+        """)
+        
+        try:
+            from algorithm_3d import create_search_space_comparison
+            fig = create_search_space_comparison()
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.warning(f"Could not load comparison: {e}")
+            st.info("View the standalone HTML: visualizations/search_space_comparison.html")
+
+# ============================================
+# PAGE 7: BONUS FEATURES
 # ============================================
 elif page == " Bonus Features":
     st.header("Bonus Contributions")
