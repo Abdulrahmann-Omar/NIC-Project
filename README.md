@@ -1,10 +1,6 @@
 #  Nature-Inspired Computation for Deep Learning Optimization
 
-<p align="center">
-  <a href="https://modal.com/"><img src="https://modal.com/assets/modal-logo-dark.svg" alt="Modal" height="40"/></a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://colab.research.google.com/"><img src="https://colab.research.google.com/img/colab_favicon_256px.png" alt="Colab" height="40"/></a>
-</p>
+
 
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)](https://tensorflow.org/)
