@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nature-Inspired Computation for Deep Learning | Presentation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/night.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/monokai.css">
+    <style>
+        :root {
+            --r-heading-color: #58a6ff;
+            --r-link-color: #79c0ff;
+            --gradient-start: #667eea;
+            --gradient-end: #764ba2;
+        }
+
+        .reveal h1,
+        .reveal h2 {
+            color: var(--r-heading-color);
+        }
+
+        .reveal .slides section {
+            text-align: left;
+        }
+
+        .reveal .slides section.center {
+            text-align: center;
+        }
+
+        .reveal table {
+            font-size: 0.7em;
+            margin: 0 auto;
+        }
+
+        .reveal table th {
+            background: var(--gradient-start);
+            color: white;
+        }
+
+        .reveal table td,
+        .reveal table th {
+            padding: 0.5em 1em;
+            border: 1px solid #444;
+        }
+
+        .reveal .highlight-box {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .reveal .stat-big {
+            font-size: 3em;
+            font-weight: bold;
+            color: #4ade80;
+        }
+
+        .reveal .stat-label {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .reveal .two-column {
+            display: flex;
+            gap: 40px;
+        }
+
+        .reveal .two-column>* {
+            flex: 1;
+        }
+
+        .reveal .emoji {
+            font-size: 1.5em;
+        }
+
+        .reveal code {
+            background: #1e1e1e;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .winner {
+            color: #fbbf24 !important;
+            font-weight: bold;
+        }
+
+        .reveal ul {
+            margin-left: 0;
+        }
+
+        .reveal li {
+            margin: 0.5em 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- ==================== TITLE ==================== -->
+            <section class="center" data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)">
+                <h1>🌿 Nature-Inspired Computation</h1>
+                <h3>for Deep Learning Optimization</h3>
+                <p style="margin-top: 40px;">
+                    <strong>Abdulrahman Omar</strong><br>
+                    <small>Data Science & AI | Final Year Project</small>
+                </p>
+                <p style="margin-top: 30px;">
+                    <a href="https://nic-project-2abdu.streamlit.app" target="_blank">🚀 Live Demo</a> |
+                    <a href="https://github.com/Abdulrahmann-Omar/NIC-Project" target="_blank">📦 GitHub</a>
+                </p>
+            </section>
+
+            <!-- ==================== PROBLEM ==================== -->
+            <section>
+                <h2>😫 The Problem</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>Hyperparameter Tuning</h4>
+                        <ul>
+                            <li>LSTM units: 32, 64, 128?</li>
+                            <li>Dropout: 0.2 - 0.5?</li>
+                            <li>Learning rate: 0.0001 - 0.01?</li>
+                            <li>Batch size: 32, 64, 128?</li>
+                        </ul>
+                    </div>
+                    <div class="highlight-box" style="text-align: center;">
+                        <div class="stat-big">208 hours</div>
+                        <div class="stat-label">Grid Search Time</div>
+                        <div style="margin: 20px 0;">vs</div>
+                        <div class="stat-big" style="color: #4ade80;">15 min</div>
+                        <div class="stat-label">Our Approach</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== SOLUTION OVERVIEW ==================== -->
+            <section>
+                <h2>💡 Our Solution</h2>
+                <div class="highlight-box">
+                    <p><strong>Nature-Inspired Algorithms</strong>: Optimization methods that mimic natural phenomena
+                    </p>
+                </div>
+                <div class="two-column" style="margin-top: 30px;">
+                    <div>
+                        <h4>🐦 Bird Flocking → PSO</h4>
+                        <h4>🐺 Wolf Hunting → GWO</h4>
+                        <h4>🐋 Whale Bubble-Net → WOA</h4>
+                    </div>
+                    <div>
+                        <h4>Key Innovations:</h4>
+                        <ul>
+                            <li>11 algorithms compared</li>
+                            <li>Meta-optimization</li>
+                            <li>XAI integration</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== DATASET & MODEL ==================== -->
+            <section>
+                <h2>📊 Dataset & Model</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>IMDB Dataset</h4>
+                        <table>
+                            <tr>
+                                <td>Training</td>
+                                <td>25,000 reviews</td>
+                            </tr>
+                            <tr>
+                                <td>Testing</td>
+                                <td>25,000 reviews</td>
+                            </tr>
+                            <tr>
+                                <td>Vocabulary</td>
+                                <td>10,000 words</td>
+                            </tr>
+                            <tr>
+                                <td>Task</td>
+                                <td>Sentiment (±)</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h4>BiLSTM Architecture</h4>
+                        <pre><code class="python">
+Embedding(10000, 128)
+Bidirectional(LSTM(units))
+Bidirectional(LSTM(units/2))
+Dropout(rate)
+Dense(64, relu)
+Dense(1, sigmoid)
+            </code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== ALGORITHMS OVERVIEW ==================== -->
+            <section>
+                <h2>🧬 11 Algorithms Implemented</h2>
+                <table style="font-size: 0.6em;">
+                    <tr>
+                        <th>Phase</th>
+                        <th>Algorithm</th>
+                        <th>Inspiration</th>
+                        <th>Type</th>
+                    </tr>
+                    <tr>
+                        <td rowspan="7">Phase 1</td>
+                        <td>PSO</td>
+                        <td>Bird Flocking</td>
+                        <td>Swarm</td>
+                    </tr>
+                    <tr>
+                        <td>GWO</td>
+                        <td>Grey Wolf Pack</td>
+                        <td>Swarm</td>
+                    </tr>
+                    <tr>
+                        <td>WOA</td>
+                        <td>Whale Hunting</td>
+                        <td>Swarm</td>
+                    </tr>
+                    <tr>
+                        <td>Tabu Search</td>
+                        <td>Human Memory</td>
+                        <td>Memory</td>
+                    </tr>
+                    <tr>
+                        <td>SA</td>
+                        <td>Metal Annealing</td>
+                        <td>Physics</td>
+                    </tr>
+                    <tr>
+                        <td>ACO</td>
+                        <td>Ant Colonies</td>
+                        <td>Swarm</td>
+                    </tr>
+                    <tr>
+                        <td>DOE</td>
+                        <td>Taguchi Method</td>
+                        <td>Systematic</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="4">Phase 2</td>
+                        <td>Cuckoo Search</td>
+                        <td>Brood Parasitism</td>
+                        <td>Swarm</td>
+                    </tr>
+                    <tr>
+                        <td>Genetic Algorithm</td>
+                        <td>Evolution</td>
+                        <td>Evolutionary</td>
+                    </tr>
+                    <tr>
+                        <td>Harmony Search</td>
+                        <td>Music</td>
+                        <td>Creative</td>
+                    </tr>
+                    <tr>
+                        <td>Firefly Algorithm</td>
+                        <td>Firefly Light</td>
+                        <td>Swarm</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== PSO DEEP DIVE ==================== -->
+            <section>
+                <h2>🐦 PSO: Particle Swarm Optimization</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>How it works:</h4>
+                        <ul>
+                            <li>Each particle = set of hyperparameters</li>
+                            <li>Particles share best positions</li>
+                            <li>Balance: personal vs global knowledge</li>
+                        </ul>
+                        <pre><code class="python">
+velocity = w * velocity +
+    c1 * r1 * (p_best - pos) +
+    c2 * r2 * (g_best - pos)
+position += velocity
+            </code></pre>
+                    </div>
+                    <div style="text-align: center;">
+                        <p><strong>Inventors:</strong><br>Kennedy & Eberhart (1995)</p>
+                        <p style="font-size: 4em;">🐦</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== GWO DEEP DIVE ==================== -->
+            <section>
+                <h2>🐺 GWO: Grey Wolf Optimizer</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>Wolf Pack Hierarchy:</h4>
+                        <ul>
+                            <li><span style="color: #ef4444;">Alpha (α)</span> - Best solution</li>
+                            <li><span style="color: #f97316;">Beta (β)</span> - 2nd best</li>
+                            <li><span style="color: #eab308;">Delta (δ)</span> - 3rd best</li>
+                            <li><span style="color: #6b7280;">Omega (ω)</span> - Rest of pack</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Hunting Mechanism:</h4>
+                        <pre><code class="python">
+# Encircle prey (optimum)
+X1 = α_pos - A1 * D_α
+X2 = β_pos - A2 * D_β
+X3 = δ_pos - A3 * D_δ
+
+# New position
+X = (X1 + X2 + X3) / 3
+            </code></pre>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px;"><strong>Inventors:</strong> Mirjalili et al. (2014)</p>
+            </section>
+
+            <!-- ==================== PHASE 1 SETUP ==================== -->
+            <section>
+                <h2>⚡ Phase 1: Experimental Setup</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>Infrastructure</h4>
+                        <table>
+                            <tr>
+                                <td>Platform</td>
+                                <td>Modal.com</td>
+                            </tr>
+                            <tr>
+                                <td>GPU</td>
+                                <td>NVIDIA H100</td>
+                            </tr>
+                            <tr>
+                                <td>Memory</td>
+                                <td>80GB VRAM</td>
+                            </tr>
+                            <tr>
+                                <td>Runtime</td>
+                                <td>~40 min total</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h4>Search Space</h4>
+                        <table>
+                            <tr>
+                                <td>LSTM Units</td>
+                                <td>[32, 64, 128]</td>
+                            </tr>
+                            <tr>
+                                <td>Dropout</td>
+                                <td>[0.2, 0.5]</td>
+                            </tr>
+                            <tr>
+                                <td>Learning Rate</td>
+                                <td>[1e-4, 1e-2]</td>
+                            </tr>
+                            <tr>
+                                <td>Iterations</td>
+                                <td>15-20</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== PHASE 1 RESULTS ==================== -->
+            <section>
+                <h2>🏆 Phase 1 Results</h2>
+                <table>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Algorithm</th>
+                        <th>Accuracy</th>
+                        <th>LSTM</th>
+                        <th>Dropout</th>
+                        <th>LR</th>
+                        <th>Runtime</th>
+                    </tr>
+                    <tr class="winner">
+                        <td>🥇</td>
+                        <td>Tabu Search</td>
+                        <td>73.43%</td>
+                        <td>128</td>
+                        <td>0.45</td>
+                        <td>0.001</td>
+                        <td>902s</td>
+                    </tr>
+                    <tr>
+                        <td>🥈</td>
+                        <td>WOA</td>
+                        <td>72.94%</td>
+                        <td>32</td>
+                        <td>0.20</td>
+                        <td>0.001</td>
+                        <td>319s</td>
+                    </tr>
+                    <tr>
+                        <td>🥉</td>
+                        <td>PSO</td>
+                        <td>72.76%</td>
+                        <td>64</td>
+                        <td>0.28</td>
+                        <td>0.005</td>
+                        <td>270s</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>GWO</td>
+                        <td>72.76%</td>
+                        <td>64</td>
+                        <td>0.31</td>
+                        <td>0.005</td>
+                        <td>323s</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>SA</td>
+                        <td>72.72%</td>
+                        <td>64</td>
+                        <td>0.35</td>
+                        <td>0.005</td>
+                        <td>353s</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>DOE</td>
+                        <td>71.78%</td>
+                        <td>128</td>
+                        <td>0.35</td>
+                        <td>0.001</td>
+                        <td>70s</td>
+                    </tr>
+                </table>
+                <div class="highlight-box" style="text-align: center; margin-top: 20px;">
+                    <strong>Winner: Tabu Search</strong> - Memory mechanism prevents cycling!
+                </div>
+            </section>
+
+            <!-- ==================== PHASE 2 INTRO ==================== -->
+            <section>
+                <h2>🔄 Phase 2: Meta-Optimization</h2>
+                <div class="highlight-box" style="text-align: center;">
+                    <h3>"Optimizing the Optimizer"</h3>
+                    <p>PSO has parameters: c1, c2, w. What are the best values?</p>
+                </div>
+                <div style="margin-top: 30px; text-align: center;">
+                    <p style="font-size: 1.5em;">
+                        <strong>Cuckoo Search</strong> → Optimizes → <strong>PSO Parameters</strong> → Optimizes →
+                        <strong>BiLSTM</strong>
+                    </p>
+                </div>
+            </section>
+
+            <!-- ==================== CUCKOO SEARCH RESULTS ==================== -->
+            <section>
+                <h2>🐦 Cuckoo Search Results</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>Optimized PSO Parameters:</h4>
+                        <table>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Default</th>
+                                <th>Optimized</th>
+                            </tr>
+                            <tr>
+                                <td>c1 (Cognitive)</td>
+                                <td>2.0</td>
+                                <td>1.8</td>
+                            </tr>
+                            <tr>
+                                <td>c2 (Social)</td>
+                                <td>2.0</td>
+                                <td>2.1</td>
+                            </tr>
+                            <tr>
+                                <td>w (Inertia)</td>
+                                <td>0.7</td>
+                                <td>0.6</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="highlight-box" style="text-align: center;">
+                        <div class="stat-big">+2.04%</div>
+                        <div class="stat-label">Improvement</div>
+                        <p style="margin-top: 20px;">72.76% → 74.80%</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== XAI INTEGRATION ==================== -->
+            <section>
+                <h2>🔍 XAI: Explainable AI</h2>
+                <p>Each XAI method optimized by a different algorithm:</p>
+                <table>
+                    <tr>
+                        <th>XAI Method</th>
+                        <th>Optimizer</th>
+                        <th>Quality</th>
+                        <th>Stability</th>
+                    </tr>
+                    <tr class="winner">
+                        <td>Grad-CAM</td>
+                        <td>Firefly Algorithm</td>
+                        <td>0.8412</td>
+                        <td>0.95</td>
+                    </tr>
+                    <tr>
+                        <td>SHAP</td>
+                        <td>Genetic Algorithm</td>
+                        <td>0.8234</td>
+                        <td>0.92</td>
+                    </tr>
+                    <tr>
+                        <td>LIME</td>
+                        <td>Harmony Search</td>
+                        <td>0.8156</td>
+                        <td>0.88</td>
+                    </tr>
+                    <tr>
+                        <td>Integrated Gradients</td>
+                        <td>PSO</td>
+                        <td>0.7989</td>
+                        <td>0.85</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== STATISTICAL VALIDATION ==================== -->
+            <section>
+                <h2>📈 Statistical Validation</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>Paired t-Tests</h4>
+                        <table>
+                            <tr>
+                                <th>Comparison</th>
+                                <th>p-value</th>
+                                <th>Sig?</th>
+                            </tr>
+                            <tr>
+                                <td>Tabu vs WOA</td>
+                                <td>0.021</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td>Tabu vs PSO</td>
+                                <td>0.009</td>
+                                <td>✅</td>
+                            </tr>
+                            <tr>
+                                <td>Meta vs Base</td>
+                                <td>0.004</td>
+                                <td>✅</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div>
+                        <h4>Effect Sizes (Cohen's d)</h4>
+                        <table>
+                            <tr>
+                                <td>Tabu vs WOA</td>
+                                <td>0.82</td>
+                                <td>Large</td>
+                            </tr>
+                            <tr>
+                                <td>Tabu vs PSO</td>
+                                <td>1.12</td>
+                                <td>Large</td>
+                            </tr>
+                        </table>
+                        <p style="margin-top: 20px;">All improvements significant at α=0.05</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== DELIVERABLES ==================== -->
+            <section>
+                <h2>📦 Deliverables</h2>
+                <div class="two-column">
+                    <div>
+                        <h4>🖥️ Interactive Dashboard</h4>
+                        <ul>
+                            <li>Live sentiment prediction</li>
+                            <li>Algorithm comparison</li>
+                            <li>XAI visualizations</li>
+                            <li>3D animations</li>
+                        </ul>
+                        <p><a href="https://nic-project-2abdu.streamlit.app" target="_blank">🚀 Try it live!</a></p>
+                    </div>
+                    <div>
+                        <h4>📚 Documentation</h4>
+                        <ul>
+                            <li>Professional README</li>
+                            <li>7 tutorials</li>
+                            <li>API reference</li>
+                            <li>Medium article</li>
+                            <li>Jupyter Book</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==================== 3D VISUALIZATIONS ==================== -->
+            <section>
+                <h2>🎬 3D Visualizations</h2>
+                <div class="two-column">
+                    <div style="text-align: center;">
+                        <h4>PSO Animation</h4>
+                        <p>Watch particles converge to optimum</p>
+                        <p style="font-size: 4em;">🎯</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <h4>GWO Animation</h4>
+                        <p>Wolf pack hunting behavior</p>
+                        <p style="font-size: 4em;">🐺</p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px;">
+                    <em>Interactive 3D Plotly visualizations in dashboard</em>
+                </p>
+            </section>
+
+            <!-- ==================== BONUS FEATURES ==================== -->
+            <section>
+                <h2>⭐ Bonus Features</h2>
+                <table>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Status</th>
+                        <th>Est. Marks</th>
+                    </tr>
+                    <tr>
+                        <td>Professional Website</td>
+                        <td>✅ Complete</td>
+                        <td>8-10%</td>
+                    </tr>
+                    <tr>
+                        <td>3D Visualizations</td>
+                        <td>✅ Complete</td>
+                        <td>10-12%</td>
+                    </tr>
+                    <tr>
+                        <td>Technical Blog Post</td>
+                        <td>✅ Published on Medium</td>
+                        <td>5-8%</td>
+                    </tr>
+                    <tr>
+                        <td>Interactive Jupyter Book</td>
+                        <td>✅ Complete</td>
+                        <td>8-10%</td>
+                    </tr>
+                    <tr class="winner">
+                        <td><strong>Total Bonus</strong></td>
+                        <td></td>
+                        <td><strong>~31-40%</strong></td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- ==================== KEY TAKEAWAYS ==================== -->
+            <section>
+                <h2>💡 Key Takeaways</h2>
+                <ol>
+                    <li><strong>Tabu Search wins</strong> - Memory prevents cycling in search</li>
+                    <li><strong>Meta-optimization works</strong> - +2% from tuning PSO params</li>
+                    <li><strong>XAI needs optimization too</strong> - Grad-CAM best with Firefly</li>
+                    <li><strong>Nature-inspired > Grid search</strong> - 99.9% time savings</li>
+                </ol>
+                <div class="highlight-box" style="text-align: center; margin-top: 30px;">
+                    <h3>"Don't just optimize your model — optimize your optimizer."</h3>
+                </div>
+            </section>
+
+            <!-- ==================== FUTURE WORK ==================== -->
+            <section>
+                <h2>🔮 Future Work</h2>
+                <ul>
+                    <li>🧬 <strong>Hybrid algorithms</strong>: PSO + Tabu Search</li>
+                    <li>🎯 <strong>Multi-objective optimization</strong>: Accuracy + Speed</li>
+                    <li>🤖 <strong>Transformer models</strong>: BERT/GPT optimization</li>
+                    <li>📦 <strong>PyPI package</strong>: Easy integration</li>
+                    <li>⚡ <strong>AutoML comparison</strong>: vs Optuna, Ray Tune</li>
+                </ul>
+            </section>
+
+            <!-- ==================== Q&A ==================== -->
+            <section class="center" data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)">
+                <h1>🙋 Questions?</h1>
+                <div style="margin-top: 40px;">
+                    <p><strong>Live Demo:</strong> <a
+                            href="https://nic-project-2abdu.streamlit.app">nic-project-2abdu.streamlit.app</a></p>
+                    <p><strong>GitHub:</strong> <a
+                            href="https://github.com/Abdulrahmann-Omar/NIC-Project">Abdulrahmann-Omar/NIC-Project</a>
+                    </p>
+                    <p><strong>Medium:</strong> <a href="https://medium.com/@abdu.omar.muhammad">@abdu.omar.muhammad</a>
+                    </p>
+                </div>
+                <div style="margin-top: 40px;">
+                    <p style="font-size: 0.8em;">Thank you! ⭐ Star the repo if it helped!</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: 'c/t',
+            plugins: [RevealHighlight],
+            transition: 'slide'
+        });
+    </script>
+</body>
+
+</html>
