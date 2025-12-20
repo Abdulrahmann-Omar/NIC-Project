@@ -1014,8 +1014,8 @@
                     style="background: var(--glass-bg);">
                     📦 View Code
                 </a>
-                <a href="https://medium.com/@abdu.omar.muhammad" target="_blank" class="btn-primary"
-                    style="background: var(--glass-bg);">
+                <a href="https://medium.com/@abdu.omar.muhammad/introduction-the-hyperparameter-tuning-nightmare-e9f41d69b5ed"
+                    target="_blank" class="btn-primary" style="background: var(--glass-bg);">
                     📝 Read Article
                 </a>
             </div>
@@ -1053,14 +1053,85 @@
         // Create navigation dots
         const slides = document.querySelectorAll('.slide');
         const navDots = document.getElementById('navDots');
+        let currentSlideIndex = 0;
 
         slides.forEach((slide, index) => {
             const dot = document.createElement('div');
             dot.className = 'nav-dot';
-            dot.addEventListener('click', () => {
-                slide.scrollIntoView({ behavior: 'smooth' });
-            });
+            dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+            dot.setAttribute('role', 'button');
+            dot.setAttribute('tabindex', '0');
+            dot.addEventListener('click', () => goToSlide(index));
             navDots.appendChild(dot);
+        });
+
+        // Navigation function
+        function goToSlide(index) {
+            if (index >= 0 && index < slides.length) {
+                currentSlideIndex = index;
+                slides[index].scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                case ' ':
+                    e.preventDefault();
+                    goToSlide(currentSlideIndex + 1);
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    e.preventDefault();
+                    goToSlide(currentSlideIndex - 1);
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    goToSlide(0);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    goToSlide(slides.length - 1);
+                    break;
+                case '?':
+                    toggleHelp();
+                    break;
+                case 'Escape':
+                    hideHelp();
+                    break;
+            }
+        });
+
+        // Help panel
+        const helpPanel = document.createElement('div');
+        helpPanel.id = 'helpPanel';
+        helpPanel.innerHTML = `
+            <div style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 32px; max-width: 400px;">
+                <h3 style="margin-bottom: 20px; color: var(--accent-blue);">⌨️ Keyboard Shortcuts</h3>
+                <table style="width: 100%; font-size: 0.9rem;">
+                    <tr><td style="padding: 8px 0; color: var(--text-secondary);">Next slide</td><td><kbd>→</kbd> or <kbd>Space</kbd></td></tr>
+                    <tr><td style="padding: 8px 0; color: var(--text-secondary);">Previous slide</td><td><kbd>←</kbd></td></tr>
+                    <tr><td style="padding: 8px 0; color: var(--text-secondary);">First slide</td><td><kbd>Home</kbd></td></tr>
+                    <tr><td style="padding: 8px 0; color: var(--text-secondary);">Last slide</td><td><kbd>End</kbd></td></tr>
+                    <tr><td style="padding: 8px 0; color: var(--text-secondary);">Toggle help</td><td><kbd>?</kbd></td></tr>
+                    <tr><td style="padding: 8px 0; color: var(--text-secondary);">Close</td><td><kbd>Esc</kbd></td></tr>
+                </table>
+                <p style="margin-top: 20px; font-size: 0.8rem; color: var(--text-secondary);">Slide ${currentSlideIndex + 1} of ${slides.length}</p>
+            </div>
+        `;
+        helpPanel.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:2000;display:none;align-items:center;justify-content:center;';
+        document.body.appendChild(helpPanel);
+
+        function toggleHelp() {
+            helpPanel.style.display = helpPanel.style.display === 'flex' ? 'none' : 'flex';
+        }
+        function hideHelp() {
+            helpPanel.style.display = 'none';
+        }
+        helpPanel.addEventListener('click', (e) => {
+            if (e.target === helpPanel) hideHelp();
         });
 
         // Update progress bar and active dot
@@ -1073,16 +1144,109 @@
             const progress = (scrollTop / docHeight) * 100;
             progressBar.style.width = progress + '%';
 
-            // Update active dot
+            // Update active dot and current index
             const slideHeight = window.innerHeight;
-            const currentSlide = Math.round(scrollTop / slideHeight);
+            currentSlideIndex = Math.round(scrollTop / slideHeight);
             dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentSlide);
+                dot.classList.toggle('active', index === currentSlideIndex);
             });
         }
 
         window.addEventListener('scroll', updateProgress);
         updateProgress();
+
+        // Animated counters
+        function animateCounter(element, target, duration = 2000) {
+            const start = 0;
+            const startTime = performance.now();
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (target - start) * eased);
+                element.textContent = current;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            requestAnimationFrame(update);
+        }
+
+        // Intersection Observer for animations
+        const observerOptions = { threshold: 0.5 };
+        const animatedElements = new Set();
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !animatedElements.has(entry.target)) {
+                    animatedElements.add(entry.target);
+
+                    // Animate stat values
+                    const statValues = entry.target.querySelectorAll('.stat-value');
+                    statValues.forEach(el => {
+                        const text = el.textContent.trim();
+                        const num = parseInt(text);
+                        if (!isNaN(num)) {
+                            animateCounter(el, num, 1500);
+                        }
+                    });
+
+                    // Stagger fade-in for cards
+                    const cards = entry.target.querySelectorAll('.glass-card, .algo-card');
+                    cards.forEach((card, i) => {
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            card.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }, i * 100);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        slides.forEach(slide => observer.observe(slide));
+
+        // URL hash navigation
+        function handleHash() {
+            const hash = window.location.hash;
+            if (hash) {
+                const slideNum = parseInt(hash.replace('#slide-', ''));
+                if (!isNaN(slideNum) && slideNum >= 1 && slideNum <= slides.length) {
+                    goToSlide(slideNum - 1);
+                }
+            }
+        }
+        window.addEventListener('hashchange', handleHash);
+        handleHash();
+
+        // Update URL hash on scroll
+        let hashTimeout;
+        window.addEventListener('scroll', () => {
+            clearTimeout(hashTimeout);
+            hashTimeout = setTimeout(() => {
+                history.replaceState(null, null, `#slide-${currentSlideIndex + 1}`);
+            }, 100);
+        });
+
+        // Slide counter display
+        const slideCounter = document.createElement('div');
+        slideCounter.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--glass-bg);backdrop-filter:blur(10px);padding:8px 16px;border-radius:20px;font-size:0.85rem;color:var(--text-secondary);z-index:100;border:1px solid var(--glass-border);';
+        slideCounter.innerHTML = `<span id="currentSlide">1</span> / ${slides.length}`;
+        document.body.appendChild(slideCounter);
+
+        setInterval(() => {
+            document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
+        }, 100);
+
+        // Reduced motion support
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.documentElement.style.scrollBehavior = 'auto';
+            document.querySelectorAll('.particle').forEach(p => p.style.animation = 'none');
+        }
     </script>
 </body>
 
