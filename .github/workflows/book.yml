@@ -28,24 +28,11 @@ jobs:
       - name: Install Jupyter Book
         run: |
           pip install jupyter-book
-          pip install myst-parser
-
-      - name: Debug - List book contents
-        run: |
-          echo "=== Book directory contents ==="
-          ls -la book/
-          echo "=== Book config ==="
-          cat book/_config.yml
-          echo "=== Book TOC ==="
-          cat book/_toc.yml
 
       - name: Build the book
         run: |
-          cd book
-          jupyter-book build . --verbose
-          echo "=== Build output ==="
-          ls -la _build/ || echo "No _build folder"
-          ls -la _build/html/ || echo "No html folder"
+          jupyter-book build book/
+          ls -la book/_build/html/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
